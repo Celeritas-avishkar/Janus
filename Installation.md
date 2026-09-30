@@ -34,7 +34,7 @@ From the folder where you want the project:
 
 ```bash
 git clone https://github.com/Celeritas-avishkar/Janus
-cd <YOUR-REPOSITORY-FOLDER>
+cd CLONED-REPOSITORY-FOLDER                                    #Path to the folder where the Repository was cloned
 ```
 
 ## **Step 4 - Create a virtual environment**
@@ -131,7 +131,7 @@ python3 --version
 
 ```bash
 git clone https://github.com/Celeritas-avishkar/Janus
-cd <YOUR-REPOSITORY-FOLDER>
+cd CLONED-REPOSITORY-FOLDER                                    #Path to the folder where the Repository was cloned
 ```
 
 ## **Step 4 - Create a virtual environment**
@@ -148,8 +148,9 @@ source .venv/bin/activate
 
 Your terminal should now show something similar to:
 
-
+```bash
 (.venv)
+```
 
 ## **Step 5 - Install dependencies**
 
