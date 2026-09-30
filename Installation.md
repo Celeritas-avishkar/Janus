@@ -16,12 +16,6 @@ You should see a Git version number.
 
 Install Python 3 for Windows.
 
-During installation, enable:
-
-Add Python to PATH
-
-where PATH is the path you would like python to be installed
-
 Check the installation:
 
 ```bash
@@ -194,7 +188,7 @@ python -m py_compile main.py
 
 If there is no output, the syntax check passed.
 
-On macOS, use the active virtual environment and the same commands:
+On macOS, use the active virtual environment and run the following commands:
 
 ```bash
 python -c "import pygame; print(pygame.version.ver)"
