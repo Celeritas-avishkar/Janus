@@ -21,7 +21,7 @@ A **<ins>Pygame-based educational simulation</ins>** that demonstrates **<ins>li
 
 ---
 
-💠 **<ins>Key Capabilities :</ins>**
+# 💠 **<ins>Key Capabilities :</ins>**
 <table> <tr> <td valign="top" width="50%">
 
 🢥 <ins>Two environments</ins>
@@ -56,7 +56,7 @@ A wind penalty is applied when flying against the prevailing wind.
 
 ---
 
-✅ **<ins>Requirements :</ins>**
+# ✅ **<ins>Requirements :</ins>**
 <br />⠀
 <br />⠀⠀⠀・ Python 3.8
 <br />⠀⠀⠀・ Pygame 2.6.1
@@ -68,7 +68,7 @@ A wind penalty is applied when flying against the prevailing wind.
 
 ---
 
-🏎️💨 **<ins>Quick Start Guide :</ins>**
+# 🏎️💨 **<ins>Quick Start Guide :</ins>**
 
 <table> <tr> <td align="center" valign="middle" width="50%"> 🢥 Use the right-hand panel to: Place Start / Goal (or cycle their altitudes). Add waypoints at a chosen altitude.⠀ &nbsp; </td> <td align="center" valign="middle" width="50%"> <img src="Assets/Start-end positions.gif" width="100% alt="Start-End positions gif""> &nbsp; </td> </tr> <tr> <td align="center" valign="middle" width="50%"> 🢥 Draw ash / turbulence / obstacle zones (click “Add …”, then two corners on the grid). Optionally press RANDOMIZE SCENARIO. <br />⠀ &nbsp; </td> <td align="center" valign="middle" width="50%"> <img src="Assets/add obstacles.gif" width="100%" alt="Obstacles add gif"> &nbsp; </td> </tr> <tr> <td align="center" valign="middle" width="50%"> 🢥 Click LAUNCH LIVE-REPLAN MISSION. Watch the drone fly the nominal path. When a threat enters the sensor circle the system announces detection, pauses briefly, then locks a corrected trajectory (old path shown dashed). <br />⠀  &nbsp; </td> <td align="center" valign="middle" width="50%"> <img src="Assets/launch.gif" width="100%" alt="launch gif"> &nbsp; </td> </tr> <tr> <td align="center" valign="middle" width="50%"> 🢥 Press P for the performance report, R to reset the flight while keeping the scenario, or use the panel buttons. <br />⠀ &nbsp; </td> <td align="center" valign="middle" width="50%"> <img src="Assets/report.gif" width="100%" alt="final report gif"> &nbsp; </td> </tr> </table>
 
