@@ -37,7 +37,7 @@ git clone https://github.com/Celeritas-avishkar/Janus
 cd CLONED-REPOSITORY-FOLDER                                    #Path to the folder where the Repository was cloned
 ```
 > [!NOTE]
-> For linux users the Repository will be cloned to `/home/user`
+> For linux users the Repository will be cloned to `/home/user` unless already cd to another folder
 
 ## **Step 4 - Create a virtual environment**
 
@@ -196,33 +196,19 @@ Or, if there is no requirements file:
 python -m pip install pygame
 ```
 
-## **Step 6 - Run the simulator**
+## **Step 6 - Verify the installation**
+
+Use the active virtual environment and run the following commands:
+
+```bash
+python -c "import pygame; print(pygame.version.ver)"
+python -m py_compile main.py
+```
+
+## **Step 7 - Run the simulator**
 
 run:
 
 ```bash
 python main.py
-```
-
-## **Verify the installation**
-
-Before running the full simulator, check Pygame:
-
-```bash
-python -c "import pygame; print(pygame.version.ver)"
-```
-
-Then check the program syntax without starting the GUI:
-
-```bash
-python -m py_compile main.py
-```
-
-If there is no output, the syntax check passed.
-
-On macOS, use the active virtual environment and run the following commands:
-
-```bash
-python -c "import pygame; print(pygame.version.ver)"
-python -m py_compile main.py
 ```
