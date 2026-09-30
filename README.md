@@ -81,6 +81,3 @@ A wind penalty is applied when flying against the prevailing wind.
 > Click REFRESH MAP TILES (or let it load automatically). Place Start / Goal / waypoints by clicking the map. Draw geographic hazard/obstacle rectangles the same way. Use mouse-wheel over the map to zoom, drag to pan, wheel over the panel to scroll. Launch the mission. Behaviour is identical to Grid Mode; the altitude profile and dashboard remain fully functional.
 
 ---
-
-❗ <ins>**Important Notes for Judges & Users :**</ins>
-
