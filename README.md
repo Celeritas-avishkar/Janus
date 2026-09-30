@@ -68,7 +68,7 @@ A wind penalty is applied when flying against the prevailing wind.
 > To use Map Mode install pillow using bash and have an internet connection while using it since it pulls OpenStreetMap API
 
 > [!Important]
-> For Installation refer [here](installation2.md)
+> For Installation refer [here](Installation.md)
 
 ---
 
