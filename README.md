@@ -22,6 +22,7 @@ A **<ins>Pygame-based educational simulation</ins>** that demonstrates **<ins>li
 ---
 
 # 💠 **<ins>Key Capabilities :</ins>**
+
 <table> <tr> <td valign="top" width="50%">
 
 🢥 <ins>Two environments</ins>
@@ -57,7 +58,7 @@ A wind penalty is applied when flying against the prevailing wind.
 ---
 
 # ✅ **<ins>Requirements :</ins>**
-<br />⠀
+
 <br />⠀⠀⠀・ Python 3.8
 <br />⠀⠀⠀・ Pygame 2.6.1
 <br />⠀⠀⠀・ Requests 2.32.0
@@ -65,6 +66,9 @@ A wind penalty is applied when flying against the prevailing wind.
 
 > [!Note]
 > To use Map Mode install pillow using bash and have an internet connection while using it since it pulls OpenStreetMap API
+
+> [!Important]
+> For Installation refer [here](installation2.md)
 
 ---
 
