@@ -55,6 +55,9 @@ Ascent maneuvers carry higher cost, as the system is optimized to keep the same 
 A wind penalty is applied when flying against the prevailing wind.
 </td> </tr> </table>
 
+> [!CAUTION]
+> Path costs, energy figures and wind penalties are **illustrative demonstrator values**, **NOT flight-control limits**. Ash plumes that reach the top altitude layer are treated as **full vertical exclusion volumes** (the planner cannot “climb over” them). Low turbulence is intentionally pass-through; only moderate/high turbulence and ash force a re plan.
+
 ---
 
 # ✅ **<ins>Requirements :</ins>**
