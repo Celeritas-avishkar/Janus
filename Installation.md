@@ -1,4 +1,4 @@
-# <ins>**Windows Installation :**</ins>
+# <ins>**Windows/Linux Installation :**</ins>
 
 ## **Step 1 - Install Git**
 
@@ -36,6 +36,8 @@ From the folder where you want the project:
 git clone https://github.com/Celeritas-avishkar/Janus
 cd CLONED-REPOSITORY-FOLDER                                    #Path to the folder where the Repository was cloned
 ```
+> [!NOTE]
+> For linux users the Repository will be cloned to `/home/user`
 
 ## **Step 4 - Create a virtual environment**
 
@@ -65,7 +67,13 @@ If PowerShell blocks activation, you can either use Command Prompt:
 
 or run Python directly from the environment.
 
-## **Step 5 - Install dependencies**
+> [!Note]
+> For Linux users, make sure `fish` is installed, then,  cd to `.venv/bin/` and then run `activate.fish`
+
+> [!Warning]
+> Do not forget to cd out of the `.venv/bin/` directory!
+
+## **Step 5.1 - Install dependencies (For Windows Users)**
 
 With the virtual environment active:
 
@@ -78,6 +86,29 @@ If requirements.txt is not present, install Pygame directly:
 
 ```bash
 python -m pip install pygame
+```
+
+## **Step 5.2 - Install dependencies (For Linux Users)**
+
+With the virtual environment active:
+
+For Fedora-based Distros:
+
+```bash
+sudo dnf install python3-pygame
+```
+
+For Debian-based Distros (Ubuntu, Linux Mint, etc.) !!!UNTESTED!!!
+
+```bash
+sudo apt-get install python3-pygame
+```
+
+Then run:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
 ## **Step-6 Verify the installation**
