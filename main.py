@@ -36,6 +36,7 @@ VERTICAL_COST = 2
 ENERGY_PER_COST_UNIT = 0.5
 WIND_DIRECTION = (1, 0)
 WIND_PENALTY = 3
+DIAGONAL_COST = math.sqrt(2)
 
 TURBULENCE_LEVELS = ["LOW", "MODERATE", "HIGH"]
 TURBULENCE_COST = {"LOW": 2, "MODERATE": 8, "HIGH": 28}
@@ -399,6 +400,49 @@ def get_selected_hazard():
 
 
 
+def is_horizontal_diagonal(a, b):
+    return a[2] == b[2] and a[0] != b[0] and a[1] != b[1]
+
+
+def base_move_cost(a, b):
+    """Geometric cost of one step: vertical, diagonal (sqrt 2) or cardinal."""
+    if a[2] != b[2]:
+        return VERTICAL_COST
+    return DIAGONAL_COST if is_horizontal_diagonal(a, b) else 1
+
+
+def step_length(a, b):
+    """Horizontal step length in cells (keeps ground speed constant)."""
+    return DIAGONAL_COST if is_horizontal_diagonal(a, b) else 1.0
+
+
+def octile_heuristic(a, b):
+    dx, dy = abs(a[0] - b[0]), abs(a[1] - b[1])
+    horizontal = (dx + dy) + (DIAGONAL_COST - 2) * min(dx, dy)
+    return horizontal + VERTICAL_COST * abs(a[2] - b[2])
+
+
+def neighbor_moves(cell, cols, rows, is_free):
+    """8-way horizontal + vertical moves. A diagonal is only allowed if both
+    adjacent cardinal cells are free, so the drone can never clip a corner."""
+    x, y, z = cell
+    out = []
+    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        c = (x + dx, y + dy, z)
+        if 0 <= c[0] < cols and 0 <= c[1] < rows and is_free(c):
+            out.append(c)
+    for dx, dy in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+        c = (x + dx, y + dy, z)
+        if (0 <= c[0] < cols and 0 <= c[1] < rows and is_free(c)
+                and is_free((x + dx, y, z)) and is_free((x, y + dy, z))):
+            out.append(c)
+    for dz in (1, -1):
+        c = (x, y, z + dz)
+        if 0 <= c[2] < GRID_LAYERS and is_free(c):
+            out.append(c)
+    return out
+
+
 def wind_cost_grid(a, b):
     if a[2] != b[2]:
         return 0
@@ -406,33 +450,25 @@ def wind_cost_grid(a, b):
     return WIND_PENALTY if dx * WIND_DIRECTION[0] + dy * WIND_DIRECTION[1] < 0 else 0
 
 
+def grid_cell_free(c):
+    return (not in_any_obstacle_grid(c)
+            and not any(hazard_blocks_cell(c, h) for h in hazards))
+
+
 def grid_neighbors(cell, goal=None):
-    """Candidate moves for A*. Solid obstacles are always impassable. Hazards
-    that require adaptive avoidance (ash, MODERATE/HIGH turbulence) are also
-    treated as impassable here -- previously they only added cost, so A* would
-    happily fly straight through an ash band or turbulence cell whenever that
-    was cheaper than detouring around it. LOW turbulence remains a pass-through
-    (soft-cost only) region. The goal cell itself is always allowed through so
-    a goal placed inside a hazard zone stays reachable."""
-    x, y, z = cell
-    candidates = [(x + 1, y, z), (x - 1, y, z),
-                  (x, y + 1, z), (x, y - 1, z),
-                  (x, y, z + 1), (x, y, z - 1)]
-    return [c for c in candidates
-            if 0 <= c[0] < GRID_COLS and 0 <= c[1] < GRID_ROWS and 0 <= c[2] < GRID_LAYERS
-            and not in_any_obstacle_grid(c)
-            and not any(hazard_blocks_cell(c, h) for h in hazards)]
+    """8-way horizontal moves (no corner cutting) + vertical moves.
+    Solid obstacles and avoidance hazards are impassable."""
+    return neighbor_moves(cell, GRID_COLS, GRID_ROWS, grid_cell_free)
 
 
 def grid_move_cost(a, b):
-    base = VERTICAL_COST if a[2] != b[2] else 1
-    total = base + wind_cost_grid(a, b)
+    total = base_move_cost(a, b) + wind_cost_grid(a, b)
     total += sum(hazard_cost(h) for h in hazards_at_grid(b))
     return total
 
 
 def grid_heuristic(a, b):
-    return abs(a[0] - b[0]) + abs(a[1] - b[1]) + VERTICAL_COST * abs(a[2] - b[2])
+    return octile_heuristic(a, b)
 
 
 def reconstruct_path(came_from, current):
@@ -472,25 +508,13 @@ def direct_path(start, goal):
     x, y, z = start
     gx, gy, gz = goal
     result = [(x, y, z)]
-    # Move on the largest horizontal axis first for a readable nominal flight line.
-    axes = []
-    if abs(gx - x) >= abs(gy - y):
-        axes = [("x", gx), ("y", gy), ("z", gz)]
-    else:
-        axes = [("y", gy), ("x", gx), ("z", gz)]
-    for axis, target in axes:
-        while True:
-            current = {"x": x, "y": y, "z": z}[axis]
-            if current == target:
-                break
-            step = 1 if target > current else -1
-            if axis == "x":
-                x += step
-            elif axis == "y":
-                y += step
-            else:
-                z += step
-            result.append((x, y, z))
+    while x != gx or y != gy:
+        x += (gx > x) - (gx < x)
+        y += (gy > y) - (gy < y)
+        result.append((x, y, z))
+    while z != gz:
+        z += 1 if gz > z else -1
+        result.append((x, y, z))
     return result
 
 
@@ -745,17 +769,10 @@ def map_astar(start, goal):
         return any(hazard_blocks_cell(cell, h) for h in map_hazards)
 
     def neighbors(cell):
-        x, y, z = cell
-        candidates = [(x + 1, y, z), (x - 1, y, z),
-                      (x, y + 1, z), (x, y - 1, z),
-                      (x, y, z + 1), (x, y, z - 1)]
-        return [c for c in candidates
-                if 0 <= c[0] < MAP_COLS and 0 <= c[1] < MAP_ROWS and 0 <= c[2] < GRID_LAYERS
-                and not blocked(c)
-                and not hazard_blocked(c)]
+        return neighbor_moves(cell, MAP_COLS, MAP_ROWS,
+                              lambda c: not blocked(c) and not hazard_blocked(c))
 
     def cost(a, b):
-        base = VERTICAL_COST if a[2] != b[2] else 1
         wind = 0
         if a[2] == b[2]:
             dx, dy = b[0] - a[0], b[1] - a[1]
@@ -765,10 +782,10 @@ def map_astar(start, goal):
         for bnd, h in hazard_bounds:
             if cell_inside_bounds(b, bnd, h["z_min"], h["z_max"]):
                 hazard_total += hazard_cost(h)
-        return base + wind + hazard_total
+        return base_move_cost(a, b) + wind + hazard_total
 
     def heuristic(a, b):
-        return abs(a[0] - b[0]) + abs(a[1] - b[1]) + VERTICAL_COST * abs(a[2] - b[2])
+        return octile_heuristic(a, b)
 
     open_set = [(heuristic(start, goal), 0, start)]
     came_from = {}
@@ -1218,7 +1235,9 @@ def grid_update_mission(dt):
             if lows:
                 announce("LOW TURBULENCE DETECTED — HOLDING COURSE", "safe", 1.0)
 
-    grid_progress += DRONE_SPEED_VALUES[DRONE_SPEED_INDEX] * dt
+    seg_len = (step_length(grid_path[grid_current_segment], grid_path[grid_current_segment + 1])
+               if grid_current_segment < len(grid_path) - 1 else 1.0)
+    grid_progress += DRONE_SPEED_VALUES[DRONE_SPEED_INDEX] * dt / seg_len
     while grid_progress >= 1.0 and not grid_mission_complete:
         grid_progress -= 1.0
         if grid_current_segment < len(grid_path) - 1:
@@ -1270,7 +1289,9 @@ def map_update_mission(dt):
             if lows:
                 announce("LOW TURBULENCE DETECTED — HOLDING COURSE", "safe", 1.0)
 
-    map_progress += DRONE_SPEED_VALUES[DRONE_SPEED_INDEX] * dt
+    seg_len = (step_length(map_path[map_current_segment], map_path[map_current_segment + 1])
+               if map_current_segment < len(map_path) - 1 else 1.0)
+    map_progress += DRONE_SPEED_VALUES[DRONE_SPEED_INDEX] * dt / seg_len
     while map_progress >= 1.0 and not map_mission_complete:
         map_progress -= 1.0
         if map_current_segment < len(map_path) - 1:
@@ -1307,7 +1328,7 @@ def map_path_cost(p):
     total = 0
     for i in range(1, len(p)):
         a, b = p[i - 1], p[i]
-        total += VERTICAL_COST if a[2] != b[2] else 1
+        total += base_move_cost(a, b)
         if a[2] == b[2]:
             dx, dy = b[0] - a[0], b[1] - a[1]
             if dx * WIND_DIRECTION[0] + dy * WIND_DIRECTION[1] < 0:
@@ -1758,7 +1779,7 @@ def compute_profile(path, is_map=False, rect=None):
     distances = [0.0]
     for i in range(1, len(path)):
         if is_map:
-            step = 1.0 if path[i][2] == path[i - 1][2] else float(VERTICAL_COST)
+            step = float(base_move_cost(path[i - 1], path[i]))
         else:
             step = float(grid_move_cost(path[i - 1], path[i]))
         distances.append(distances[-1] + max(0.01, step))
@@ -2210,7 +2231,7 @@ def draw_dashboard(is_map=False):
         status = "MISSION COMPLETE" if complete else ("HAZARD DETECTED" if grid_hazard_ahead else "CLEAR")
 
     cols = [
-        [("MISSION TIME", f"{elapsed:.1f} s"), ("PATH COST", str(cost)), ("ALTITUDE CHANGES", str(alt_changes))],
+        [("MISSION TIME", f"{elapsed:.1f} s"), ("PATH COST", f"{cost:.1f}"), ("ALTITUDE CHANGES", str(alt_changes))],
         [("HAZARD CELLS CROSSED", str(crossed)), ("REPLANS", str(replans)), ("LAST REPLAN", f"{replan_ms:.2f} ms")],
         [("EST. ENERGY", f"{cost * ENERGY_PER_COST_UNIT:.1f} units"), ("ROUTE STATUS", status), ("SPEED", DRONE_SPEED_LABELS[DRONE_SPEED_INDEX])]
     ]
@@ -2240,7 +2261,7 @@ def draw_report(is_map=False):
             ("Last Replan", f"{map_last_replan_ms:.2f} ms"),
             ("Hazard Cells Crossed", str(map_hazard_cells_crossed)),
             ("Altitude Changes", str(path_altitude_changes(map_path))),
-            ("Path Cost", str(map_path_cost(map_path))),
+            ("Path Cost", f"{map_path_cost(map_path):.1f}"),
             ("Waypoints", str(len(map_waypoints))),
         ]
     else:
@@ -2252,7 +2273,7 @@ def draw_report(is_map=False):
             ("Last Replan", f"{grid_last_replan_ms:.2f} ms"),
             ("Hazard Cells Crossed", str(grid_hazard_cells_crossed)),
             ("Altitude Changes", str(path_altitude_changes(grid_path))),
-            ("Path Cost", str(path_cost_grid(grid_path))),
+            ("Path Cost", f"{path_cost_grid(grid_path):.1f}"),
             ("Waypoints", str(len(waypoints))),
         ]
     card_w = 480
