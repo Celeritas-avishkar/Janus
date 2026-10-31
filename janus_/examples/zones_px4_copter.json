@@ -1,0 +1,68 @@
+{
+  "wind": {
+    "from_deg": 250,
+    "speed_ms": 4
+  },
+  "zones": [
+    {
+      "id": "TFR1",
+      "type": "tfr",
+      "shape": "circle",
+      "lat": 47.4004369,
+      "lon": 8.5489117,
+      "radius_m": 120,
+      "alt_min_m": 0,
+      "alt_max_m": 400
+    },
+    {
+      "id": "V1",
+      "type": "ash",
+      "shape": "plume",
+      "lat": 47.3984607,
+      "lon": 8.5524949,
+      "conc_mg": 8,
+      "r0_m": 35,
+      "spread": 0.18,
+      "decay_m": 600,
+      "alt_min_m": 0,
+      "alt_max_m": 300
+    },
+    {
+      "id": "GF1",
+      "type": "geofence",
+      "shape": "polygon",
+      "points": [
+        [
+          47.4024132,
+          8.5445323
+        ],
+        [
+          47.4033116,
+          8.5445323
+        ],
+        [
+          47.4033116,
+          8.5471865
+        ],
+        [
+          47.4024132,
+          8.5471865
+        ]
+      ]
+    },
+    {
+      "id": "HIDDEN1",
+      "type": "ash",
+      "shape": "circle",
+      "lat": 47.4016946,
+      "lon": 8.5526276,
+      "radius_m": 50,
+      "conc_mg": 6,
+      "alt_min_m": 0,
+      "alt_max_m": 200,
+      "reported": false,
+      "drift": true,
+      "at_s": 110
+    }
+  ]
+}

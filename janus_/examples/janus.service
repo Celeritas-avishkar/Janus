@@ -1,0 +1,16 @@
+# Start Janus at boot on the companion computer.
+#   sudo cp examples/janus.service /etc/systemd/system/ && sudo systemctl enable --now janus
+# Edit the goal, zones and serial port first. Janus waits for the operator to arm and switch to Mission.
+[Unit]
+Description=Janus route supervisor (MAVLink companion)
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/janus
+ExecStart=/home/pi/janus/.venv/bin/python -m janus_fc fly --connect /dev/ttyAMA0 --baud 921600 --goal LAT,LON,ALT --zones /home/pi/janus/zones.json --fence --advisory-port 47900 --blackbox /home/pi/janus/logs/janus.jsonl
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

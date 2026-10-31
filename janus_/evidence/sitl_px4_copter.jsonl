@@ -1,0 +1,768 @@
+{"t": 1793474933.82, "kind": "event", "code": "PREFLIGHT", "text": "home 47.397741,8.545595; 4 zones; 1 unreported", "state": "PREFLIGHT"}
+{"t": 1793474933.869, "kind": "plan", "route": [[0.0, 0.0, 30.0], [220.0, 400.0, 30.0], [650.1, 649.9, 40.0]], "hold": false, "ms": 45.0, "items": 5}
+{"t": 1793474933.87, "kind": "event", "code": "MISSION", "text": "2 waypoints, planned in 45 ms", "state": "PREFLIGHT"}
+{"t": 1793474934.059, "kind": "event", "code": "LAUNCH", "text": "auto launch", "state": "READY"}
+{"t": 1793474934.86, "kind": "pos", "lat": 47.3977412, "lon": 8.5455953, "alt": 0.02, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474935.36, "kind": "pos", "lat": 47.3977414, "lon": 8.5455953, "alt": 0.069, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474935.864, "kind": "pos", "lat": 47.3977417, "lon": 8.5455956, "alt": 0.154, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474936.376, "kind": "pos", "lat": 47.3977418, "lon": 8.5455959, "alt": 0.219, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474936.879, "kind": "pos", "lat": 47.3977416, "lon": 8.5455962, "alt": 0.299, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474937.381, "kind": "pos", "lat": 47.3977418, "lon": 8.5455959, "alt": 1.081, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474937.883, "kind": "pos", "lat": 47.3977419, "lon": 8.5455955, "alt": 1.091, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474938.388, "kind": "pos", "lat": 47.3977428, "lon": 8.5455949, "alt": 1.129, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474938.896, "kind": "pos", "lat": 47.3977427, "lon": 8.5455945, "alt": -0.037, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474939.403, "kind": "pos", "lat": 47.3977422, "lon": 8.5455947, "alt": 0.127, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474939.912, "kind": "pos", "lat": 47.3977422, "lon": 8.5455951, "alt": 0.385, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474940.42, "kind": "pos", "lat": 47.3977423, "lon": 8.5455973, "alt": 1.0, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474940.929, "kind": "pos", "lat": 47.3977423, "lon": 8.545598, "alt": 3.043, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474941.436, "kind": "pos", "lat": 47.3977418, "lon": 8.5455993, "alt": 2.087, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474941.944, "kind": "pos", "lat": 47.3977414, "lon": 8.5455989, "alt": 3.936, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474942.451, "kind": "pos", "lat": 47.397741, "lon": 8.5455983, "alt": 4.728, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474942.959, "kind": "pos", "lat": 47.3977412, "lon": 8.545599, "alt": 4.047, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474943.466, "kind": "pos", "lat": 47.3977418, "lon": 8.5456004, "alt": 4.936, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474943.975, "kind": "pos", "lat": 47.3977418, "lon": 8.5456008, "alt": 5.519, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474944.485, "kind": "pos", "lat": 47.3977418, "lon": 8.5456012, "alt": 7.461, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474944.993, "kind": "pos", "lat": 47.3977413, "lon": 8.5456012, "alt": 8.041, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474945.502, "kind": "pos", "lat": 47.3977409, "lon": 8.5456009, "alt": 7.682, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474946.002, "kind": "pos", "lat": 47.3977407, "lon": 8.5456002, "alt": 8.296, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474946.503, "kind": "pos", "lat": 47.3977405, "lon": 8.5455997, "alt": 9.24, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474947.012, "kind": "pos", "lat": 47.3977407, "lon": 8.5455996, "alt": 9.88, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474947.524, "kind": "pos", "lat": 47.3977404, "lon": 8.5456, "alt": 11.481, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474948.034, "kind": "pos", "lat": 47.3977399, "lon": 8.5455996, "alt": 11.38, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474948.542, "kind": "pos", "lat": 47.3977398, "lon": 8.5455992, "alt": 13.769, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474949.052, "kind": "pos", "lat": 47.3977397, "lon": 8.545598, "alt": 16.403, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474949.558, "kind": "pos", "lat": 47.3977397, "lon": 8.5455963, "alt": 17.586, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474950.059, "kind": "pos", "lat": 47.3977398, "lon": 8.5455955, "alt": 18.725, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474950.56, "kind": "pos", "lat": 47.3977403, "lon": 8.545594, "alt": 19.799, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474951.069, "kind": "pos", "lat": 47.3977411, "lon": 8.5455911, "alt": 21.467, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474951.571, "kind": "pos", "lat": 47.3977412, "lon": 8.5455899, "alt": 22.556, "mode": "mission", "state": "TAKEOFF", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474952.005, "kind": "event", "code": "ENROUTE", "text": "climbed out; monitoring", "state": "ENROUTE"}
+{"t": 1793474952.01, "kind": "opc", "n": 0.0, "e": -0.5, "alt": 24.3, "mg": 0.015}
+{"t": 1793474952.078, "kind": "pos", "lat": 47.3977414, "lon": 8.5455884, "alt": 24.251, "mode": "mission", "state": "ENROUTE", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474952.586, "kind": "pos", "lat": 47.3977414, "lon": 8.5455877, "alt": 25.293, "mode": "mission", "state": "ENROUTE", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474953.012, "kind": "opc", "n": 0.0, "e": -0.6, "alt": 26.1, "mg": 0.008}
+{"t": 1793474953.093, "kind": "pos", "lat": 47.3977414, "lon": 8.545588, "alt": 26.465, "mode": "mission", "state": "ENROUTE", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474953.602, "kind": "pos", "lat": 47.3977414, "lon": 8.5455886, "alt": 27.027, "mode": "mission", "state": "ENROUTE", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474954.018, "kind": "opc", "n": 0.0, "e": -0.4, "alt": 27.5, "mg": 0.0}
+{"t": 1793474954.107, "kind": "pos", "lat": 47.3977414, "lon": 8.5455904, "alt": 27.7, "mode": "mission", "state": "ENROUTE", "batt": 100.0, "seq": 0, "armed": true}
+{"t": 1793474954.615, "kind": "pos", "lat": 47.3977416, "lon": 8.5455927, "alt": 27.005, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 0, "armed": true}
+{"t": 1793474955.021, "kind": "opc", "n": 0.1, "e": -0.0, "alt": 27.4, "mg": 0.014}
+{"t": 1793474955.123, "kind": "pos", "lat": 47.3977415, "lon": 8.5455953, "alt": 27.431, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 0, "armed": true}
+{"t": 1793474955.631, "kind": "pos", "lat": 47.3977413, "lon": 8.5455959, "alt": 29.212, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 0, "armed": true}
+{"t": 1793474956.03, "kind": "opc", "n": -0.0, "e": 0.1, "alt": 29.5, "mg": 0.001}
+{"t": 1793474956.139, "kind": "pos", "lat": 47.3977406, "lon": 8.5455961, "alt": 29.576, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 0, "armed": true}
+{"t": 1793474956.639, "kind": "pos", "lat": 47.3977403, "lon": 8.5455965, "alt": 29.927, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474957.033, "kind": "opc", "n": -0.0, "e": 0.1, "alt": 30.1, "mg": 0.009}
+{"t": 1793474957.146, "kind": "pos", "lat": 47.3977413, "lon": 8.5455977, "alt": 30.132, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474957.655, "kind": "pos", "lat": 47.3977442, "lon": 8.5456021, "alt": 28.77, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474958.036, "kind": "opc", "n": 0.8, "e": 1.2, "alt": 30.1, "mg": 0.001}
+{"t": 1793474958.162, "kind": "pos", "lat": 47.3977511, "lon": 8.5456174, "alt": 30.101, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474958.668, "kind": "pos", "lat": 47.3977574, "lon": 8.5456323, "alt": 30.142, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474959.038, "kind": "opc", "n": 2.7, "e": 4.2, "alt": 30.2, "mg": 0.005}
+{"t": 1793474959.168, "kind": "pos", "lat": 47.3977691, "lon": 8.5456624, "alt": 30.192, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474959.676, "kind": "pos", "lat": 47.3977779, "lon": 8.5456866, "alt": 30.226, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474960.041, "kind": "opc", "n": 5.2, "e": 8.9, "alt": 30.2, "mg": 0.024}
+{"t": 1793474960.183, "kind": "pos", "lat": 47.3977922, "lon": 8.5457268, "alt": 30.212, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474960.69, "kind": "pos", "lat": 47.3978021, "lon": 8.5457535, "alt": 30.19, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474961.048, "kind": "opc", "n": 7.9, "e": 13.9, "alt": 30.2, "mg": 0.002}
+{"t": 1793474961.198, "kind": "pos", "lat": 47.3978165, "lon": 8.5457928, "alt": 30.483, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474961.703, "kind": "pos", "lat": 47.3978259, "lon": 8.5458195, "alt": 30.415, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474962.055, "kind": "opc", "n": 10.6, "e": 18.9, "alt": 30.3, "mg": 0.002}
+{"t": 1793474962.208, "kind": "pos", "lat": 47.3978413, "lon": 8.5458605, "alt": 29.105, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474962.711, "kind": "pos", "lat": 47.3978516, "lon": 8.5458886, "alt": 30.283, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474963.058, "kind": "opc", "n": 13.5, "e": 24.3, "alt": 30.2, "mg": 0.004}
+{"t": 1793474963.212, "kind": "pos", "lat": 47.3978622, "lon": 8.5459176, "alt": 30.233, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474963.72, "kind": "pos", "lat": 47.3978784, "lon": 8.5459617, "alt": 30.203, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474964.064, "kind": "opc", "n": 16.5, "e": 29.9, "alt": 30.2, "mg": 0.01}
+{"t": 1793474964.226, "kind": "pos", "lat": 47.3978893, "lon": 8.5459923, "alt": 30.156, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474964.734, "kind": "pos", "lat": 47.3979068, "lon": 8.5460397, "alt": 30.287, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474965.067, "kind": "opc", "n": 19.8, "e": 35.8, "alt": 29.1, "mg": 0.001}
+{"t": 1793474965.242, "kind": "pos", "lat": 47.397919, "lon": 8.5460707, "alt": 29.149, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474965.751, "kind": "pos", "lat": 47.3979371, "lon": 8.5461181, "alt": 29.428, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474966.071, "kind": "opc", "n": 23.2, "e": 41.8, "alt": 29.4, "mg": 0.005}
+{"t": 1793474966.258, "kind": "pos", "lat": 47.3979494, "lon": 8.5461505, "alt": 29.441, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474966.766, "kind": "pos", "lat": 47.3979687, "lon": 8.5462002, "alt": 29.451, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474967.074, "kind": "opc", "n": 26.1, "e": 46.8, "alt": 29.5, "mg": 0.007}
+{"t": 1793474967.274, "kind": "pos", "lat": 47.3979818, "lon": 8.5462332, "alt": 30.527, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474967.781, "kind": "pos", "lat": 47.398001, "lon": 8.5462835, "alt": 30.126, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474968.085, "kind": "opc", "n": 29.6, "e": 53.1, "alt": 30.1, "mg": 0.011}
+{"t": 1793474968.287, "kind": "pos", "lat": 47.3980135, "lon": 8.5463172, "alt": 30.151, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474968.796, "kind": "pos", "lat": 47.3980325, "lon": 8.5463675, "alt": 30.163, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474969.09, "kind": "opc", "n": 33.1, "e": 59.5, "alt": 30.2, "mg": 0.002}
+{"t": 1793474969.305, "kind": "pos", "lat": 47.3980444, "lon": 8.5464018, "alt": 28.949, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474969.808, "kind": "pos", "lat": 47.398063, "lon": 8.5464533, "alt": 30.151, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474970.091, "kind": "opc", "n": 36.5, "e": 66.0, "alt": 30.2, "mg": 0.011}
+{"t": 1793474970.309, "kind": "pos", "lat": 47.3980754, "lon": 8.5464881, "alt": 30.148, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474970.816, "kind": "pos", "lat": 47.398094, "lon": 8.5465405, "alt": 30.339, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474971.099, "kind": "opc", "n": 40.0, "e": 72.5, "alt": 30.3, "mg": 0.005}
+{"t": 1793474971.322, "kind": "pos", "lat": 47.3981066, "lon": 8.5465752, "alt": 30.337, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474971.828, "kind": "pos", "lat": 47.398126, "lon": 8.546628, "alt": 29.087, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474972.103, "kind": "opc", "n": 43.6, "e": 79.2, "alt": 29.1, "mg": 0.001}
+{"t": 1793474972.328, "kind": "pos", "lat": 47.398139, "lon": 8.5466636, "alt": 29.103, "mode": "mission", "state": "ENROUTE", "batt": 99.0, "seq": 2, "armed": true}
+{"t": 1793474972.831, "kind": "pos", "lat": 47.3981584, "lon": 8.5467175, "alt": 29.241, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474973.107, "kind": "opc", "n": 47.2, "e": 85.9, "alt": 29.2, "mg": 0.007}
+{"t": 1793474973.334, "kind": "pos", "lat": 47.3981717, "lon": 8.5467535, "alt": 29.265, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474973.838, "kind": "pos", "lat": 47.3981921, "lon": 8.5468066, "alt": 29.527, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474974.109, "kind": "opc", "n": 51.0, "e": 92.6, "alt": 29.5, "mg": 0.016}
+{"t": 1793474974.34, "kind": "pos", "lat": 47.3982052, "lon": 8.5468425, "alt": 28.269, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474974.84, "kind": "pos", "lat": 47.3982246, "lon": 8.5468963, "alt": 29.557, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474975.111, "kind": "opc", "n": 54.6, "e": 99.4, "alt": 29.6, "mg": 0.005}
+{"t": 1793474975.343, "kind": "pos", "lat": 47.3982376, "lon": 8.5469321, "alt": 29.563, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474975.844, "kind": "pos", "lat": 47.3982576, "lon": 8.5469855, "alt": 29.624, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474976.116, "kind": "opc", "n": 58.2, "e": 106.1, "alt": 29.6, "mg": 0.014}
+{"t": 1793474976.345, "kind": "pos", "lat": 47.3982707, "lon": 8.5470211, "alt": 29.65, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474976.85, "kind": "pos", "lat": 47.3982911, "lon": 8.5470748, "alt": 29.57, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474977.119, "kind": "opc", "n": 62.0, "e": 112.8, "alt": 29.6, "mg": 0.013}
+{"t": 1793474977.352, "kind": "pos", "lat": 47.3983044, "lon": 8.5471103, "alt": 29.535, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474977.852, "kind": "pos", "lat": 47.3983175, "lon": 8.547146, "alt": 29.509, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474978.12, "kind": "opc", "n": 65.7, "e": 119.6, "alt": 29.5, "mg": 0.014}
+{"t": 1793474978.356, "kind": "pos", "lat": 47.3983376, "lon": 8.5472006, "alt": 29.532, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474978.857, "kind": "pos", "lat": 47.3983512, "lon": 8.547237, "alt": 29.567, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474979.121, "kind": "opc", "n": 69.4, "e": 126.4, "alt": 29.0, "mg": 0.001}
+{"t": 1793474979.361, "kind": "pos", "lat": 47.3983712, "lon": 8.547292, "alt": 29.016, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474979.864, "kind": "pos", "lat": 47.3983849, "lon": 8.547328, "alt": 29.059, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474980.125, "kind": "opc", "n": 73.2, "e": 133.3, "alt": 29.1, "mg": 0.002}
+{"t": 1793474980.368, "kind": "pos", "lat": 47.3984052, "lon": 8.5473816, "alt": 29.137, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474980.878, "kind": "pos", "lat": 47.3984186, "lon": 8.5474176, "alt": 30.625, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474981.128, "kind": "opc", "n": 76.9, "e": 140.1, "alt": 30.6, "mg": 0.011}
+{"t": 1793474981.385, "kind": "pos", "lat": 47.3984387, "lon": 8.5474722, "alt": 30.581, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474981.885, "kind": "pos", "lat": 47.3984527, "lon": 8.5475083, "alt": 30.565, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474982.129, "kind": "opc", "n": 80.0, "e": 145.5, "alt": 29.2, "mg": 0.012}
+{"t": 1793474982.387, "kind": "pos", "lat": 47.3984734, "lon": 8.547562, "alt": 30.241, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474982.892, "kind": "pos", "lat": 47.3984876, "lon": 8.5475978, "alt": 29.063, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474983.136, "kind": "opc", "n": 83.9, "e": 152.3, "alt": 29.1, "mg": 0.015}
+{"t": 1793474983.392, "kind": "pos", "lat": 47.3985085, "lon": 8.5476512, "alt": 30.22, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474983.894, "kind": "pos", "lat": 47.3985224, "lon": 8.5476871, "alt": 29.035, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474984.138, "kind": "opc", "n": 87.8, "e": 159.0, "alt": 29.0, "mg": 0.009}
+{"t": 1793474984.397, "kind": "pos", "lat": 47.3985431, "lon": 8.5477412, "alt": 30.632, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474984.9, "kind": "pos", "lat": 47.3985566, "lon": 8.5477772, "alt": 29.261, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474985.14, "kind": "opc", "n": 91.5, "e": 165.8, "alt": 30.4, "mg": 0.002}
+{"t": 1793474985.404, "kind": "pos", "lat": 47.3985766, "lon": 8.5478311, "alt": 30.371, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474985.907, "kind": "pos", "lat": 47.3985903, "lon": 8.5478688, "alt": 30.339, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474986.147, "kind": "opc", "n": 95.3, "e": 172.7, "alt": 30.3, "mg": 0.003}
+{"t": 1793474986.411, "kind": "pos", "lat": 47.3986101, "lon": 8.5479243, "alt": 30.418, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474986.919, "kind": "pos", "lat": 47.3986237, "lon": 8.5479611, "alt": 30.369, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474987.151, "kind": "opc", "n": 99.0, "e": 179.7, "alt": 28.9, "mg": 0.002}
+{"t": 1793474987.42, "kind": "pos", "lat": 47.3986373, "lon": 8.5479982, "alt": 28.901, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474987.921, "kind": "pos", "lat": 47.3986581, "lon": 8.548054, "alt": 28.989, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474988.152, "kind": "opc", "n": 102.8, "e": 186.7, "alt": 30.0, "mg": 0.006}
+{"t": 1793474988.425, "kind": "pos", "lat": 47.3986716, "lon": 8.5480913, "alt": 30.065, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474988.932, "kind": "pos", "lat": 47.3986914, "lon": 8.5481469, "alt": 30.117, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474989.156, "kind": "opc", "n": 106.5, "e": 193.7, "alt": 30.1, "mg": 0.004}
+{"t": 1793474989.439, "kind": "pos", "lat": 47.3987047, "lon": 8.5481842, "alt": 30.116, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474989.942, "kind": "pos", "lat": 47.3987242, "lon": 8.54824, "alt": 30.116, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474990.157, "kind": "opc", "n": 110.2, "e": 200.7, "alt": 28.6, "mg": 0.006}
+{"t": 1793474990.442, "kind": "pos", "lat": 47.3987374, "lon": 8.5482784, "alt": 28.58, "mode": "mission", "state": "ENROUTE", "batt": 98.0, "seq": 2, "armed": true}
+{"t": 1793474990.943, "kind": "pos", "lat": 47.3987568, "lon": 8.5483361, "alt": 30.113, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474991.158, "kind": "opc", "n": 113.8, "e": 208.0, "alt": 30.1, "mg": 0.002}
+{"t": 1793474991.446, "kind": "pos", "lat": 47.3987702, "lon": 8.5483741, "alt": 30.137, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474991.95, "kind": "pos", "lat": 47.3987902, "lon": 8.5484304, "alt": 30.13, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474992.161, "kind": "opc", "n": 117.5, "e": 215.1, "alt": 30.1, "mg": 0.015}
+{"t": 1793474992.455, "kind": "pos", "lat": 47.3988037, "lon": 8.5484679, "alt": 30.137, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474992.955, "kind": "pos", "lat": 47.3988249, "lon": 8.5485231, "alt": 29.632, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474993.167, "kind": "opc", "n": 121.5, "e": 222.0, "alt": 29.7, "mg": 0.009}
+{"t": 1793474993.459, "kind": "pos", "lat": 47.3988399, "lon": 8.5485595, "alt": 29.674, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474993.959, "kind": "pos", "lat": 47.3988623, "lon": 8.5486143, "alt": 29.537, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474994.17, "kind": "opc", "n": 125.7, "e": 228.9, "alt": 29.5, "mg": 0.005}
+{"t": 1793474994.46, "kind": "pos", "lat": 47.398877, "lon": 8.5486504, "alt": 29.577, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474994.961, "kind": "pos", "lat": 47.3988981, "lon": 8.5487048, "alt": 29.647, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474995.173, "kind": "opc", "n": 129.6, "e": 235.7, "alt": 29.7, "mg": 0.009}
+{"t": 1793474995.469, "kind": "pos", "lat": 47.3989125, "lon": 8.5487408, "alt": 29.651, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474995.976, "kind": "pos", "lat": 47.3989343, "lon": 8.548794, "alt": 29.343, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474996.179, "kind": "opc", "n": 133.6, "e": 242.4, "alt": 30.7, "mg": 0.017}
+{"t": 1793474996.483, "kind": "pos", "lat": 47.3989486, "lon": 8.5488299, "alt": 30.641, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474996.984, "kind": "pos", "lat": 47.3989626, "lon": 8.5488654, "alt": 30.607, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474997.183, "kind": "opc", "n": 136.8, "e": 247.8, "alt": 30.6, "mg": 0.005}
+{"t": 1793474997.487, "kind": "pos", "lat": 47.398984, "lon": 8.5489187, "alt": 30.585, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474997.989, "kind": "pos", "lat": 47.398998, "lon": 8.5489545, "alt": 30.594, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474998.185, "kind": "opc", "n": 140.7, "e": 254.5, "alt": 30.6, "mg": 0.024}
+{"t": 1793474998.49, "kind": "pos", "lat": 47.3990183, "lon": 8.5490087, "alt": 30.571, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474998.992, "kind": "pos", "lat": 47.399032, "lon": 8.5490456, "alt": 30.382, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793474999.186, "kind": "opc", "n": 144.5, "e": 261.4, "alt": 30.4, "mg": 0.018}
+{"t": 1793474999.499, "kind": "pos", "lat": 47.3990526, "lon": 8.5491002, "alt": 30.392, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475000.0, "kind": "pos", "lat": 47.3990659, "lon": 8.5491369, "alt": 30.381, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475000.191, "kind": "opc", "n": 148.2, "e": 268.3, "alt": 30.4, "mg": 0.019}
+{"t": 1793475000.501, "kind": "pos", "lat": 47.3990856, "lon": 8.5491917, "alt": 30.391, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475001.008, "kind": "pos", "lat": 47.3990987, "lon": 8.5492281, "alt": 30.388, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475001.196, "kind": "opc", "n": 151.9, "e": 275.1, "alt": 30.4, "mg": 0.011}
+{"t": 1793475001.509, "kind": "pos", "lat": 47.3991194, "lon": 8.5492824, "alt": 30.386, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475002.012, "kind": "pos", "lat": 47.3991334, "lon": 8.5493188, "alt": 30.408, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475002.199, "kind": "opc", "n": 155.8, "e": 282.0, "alt": 30.4, "mg": 0.018}
+{"t": 1793475002.521, "kind": "pos", "lat": 47.3991543, "lon": 8.5493736, "alt": 30.4, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475003.025, "kind": "pos", "lat": 47.3991678, "lon": 8.5494102, "alt": 30.375, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475003.2, "kind": "opc", "n": 159.6, "e": 288.8, "alt": 30.4, "mg": 0.012}
+{"t": 1793475003.533, "kind": "pos", "lat": 47.3991882, "lon": 8.5494651, "alt": 30.315, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475004.033, "kind": "pos", "lat": 47.3992016, "lon": 8.5495028, "alt": 30.361, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475004.204, "kind": "opc", "n": 163.3, "e": 295.9, "alt": 30.4, "mg": 0.01}
+{"t": 1793475004.535, "kind": "pos", "lat": 47.3992148, "lon": 8.549541, "alt": 30.357, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475005.042, "kind": "pos", "lat": 47.399235, "lon": 8.5495987, "alt": 30.511, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475005.205, "kind": "opc", "n": 167.1, "e": 303.1, "alt": 29.2, "mg": 0.019}
+{"t": 1793475005.543, "kind": "pos", "lat": 47.3992486, "lon": 8.5496365, "alt": 29.249, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475006.047, "kind": "pos", "lat": 47.3992687, "lon": 8.5496922, "alt": 30.496, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475006.207, "kind": "opc", "n": 170.8, "e": 310.1, "alt": 30.5, "mg": 0.016}
+{"t": 1793475006.552, "kind": "pos", "lat": 47.3992818, "lon": 8.5497295, "alt": 30.469, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475007.059, "kind": "pos", "lat": 47.3993017, "lon": 8.5497861, "alt": 30.324, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475007.21, "kind": "opc", "n": 174.5, "e": 317.2, "alt": 30.3, "mg": 0.022}
+{"t": 1793475007.567, "kind": "pos", "lat": 47.3993149, "lon": 8.5498241, "alt": 30.321, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475008.067, "kind": "pos", "lat": 47.3993352, "lon": 8.5498802, "alt": 30.304, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475008.212, "kind": "opc", "n": 177.5, "e": 322.9, "alt": 30.3, "mg": 0.019}
+{"t": 1793475008.567, "kind": "pos", "lat": 47.3993492, "lon": 8.5499173, "alt": 30.33, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475009.074, "kind": "pos", "lat": 47.3993701, "lon": 8.5499724, "alt": 30.361, "mode": "mission", "state": "ENROUTE", "batt": 97.0, "seq": 2, "armed": true}
+{"t": 1793475009.216, "kind": "opc", "n": 181.4, "e": 329.8, "alt": 30.4, "mg": 0.033}
+{"t": 1793475009.582, "kind": "pos", "lat": 47.399383, "lon": 8.5500095, "alt": 29.231, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475010.082, "kind": "pos", "lat": 47.3994029, "lon": 8.5500664, "alt": 29.264, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475010.22, "kind": "opc", "n": 185.0, "e": 336.9, "alt": 29.3, "mg": 0.039}
+{"t": 1793475010.588, "kind": "pos", "lat": 47.3994165, "lon": 8.550104, "alt": 29.312, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475011.092, "kind": "pos", "lat": 47.3994307, "lon": 8.5501414, "alt": 29.368, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475011.223, "kind": "opc", "n": 188.9, "e": 344.0, "alt": 29.4, "mg": 0.045}
+{"t": 1793475011.592, "kind": "pos", "lat": 47.3994522, "lon": 8.5501965, "alt": 30.449, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475012.096, "kind": "pos", "lat": 47.3994668, "lon": 8.550233, "alt": 30.344, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475012.225, "kind": "opc", "n": 192.9, "e": 350.8, "alt": 30.3, "mg": 0.048}
+{"t": 1793475012.596, "kind": "pos", "lat": 47.3994885, "lon": 8.5502881, "alt": 30.332, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475013.099, "kind": "pos", "lat": 47.3995025, "lon": 8.5503254, "alt": 30.392, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475013.225, "kind": "opc", "n": 196.9, "e": 357.8, "alt": 30.4, "mg": 0.036}
+{"t": 1793475013.607, "kind": "pos", "lat": 47.3995233, "lon": 8.5503801, "alt": 30.317, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475014.115, "kind": "pos", "lat": 47.3995364, "lon": 8.5504168, "alt": 30.254, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475014.229, "kind": "opc", "n": 200.6, "e": 364.7, "alt": 30.2, "mg": 0.038}
+{"t": 1793475014.623, "kind": "pos", "lat": 47.399557, "lon": 8.5504729, "alt": 30.166, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475015.13, "kind": "pos", "lat": 47.399571, "lon": 8.5505103, "alt": 30.122, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475015.232, "kind": "opc", "n": 204.5, "e": 371.8, "alt": 29.0, "mg": 0.048}
+{"t": 1793475015.63, "kind": "pos", "lat": 47.3995917, "lon": 8.550566, "alt": 30.234, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475016.133, "kind": "pos", "lat": 47.399606, "lon": 8.550603, "alt": 30.303, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475016.234, "kind": "opc", "n": 208.4, "e": 378.7, "alt": 30.3, "mg": 0.058}
+{"t": 1793475016.636, "kind": "pos", "lat": 47.3996273, "lon": 8.5506569, "alt": 29.212, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475017.143, "kind": "pos", "lat": 47.399641, "lon": 8.550694, "alt": 30.701, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475017.236, "kind": "opc", "n": 212.3, "e": 385.6, "alt": 29.5, "mg": 0.05}
+{"t": 1793475017.643, "kind": "pos", "lat": 47.3996607, "lon": 8.5507503, "alt": 29.543, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475018.146, "kind": "pos", "lat": 47.3996735, "lon": 8.5507848, "alt": 29.566, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475018.24, "kind": "opc", "n": 215.8, "e": 392.3, "alt": 29.6, "mg": 0.065}
+{"t": 1793475018.647, "kind": "pos", "lat": 47.3996902, "lon": 8.550831, "alt": 29.71, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475019.147, "kind": "pos", "lat": 47.3996999, "lon": 8.5508586, "alt": 29.523, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475019.241, "kind": "opc", "n": 218.5, "e": 397.6, "alt": 31.0, "mg": 0.064}
+{"t": 1793475019.647, "kind": "pos", "lat": 47.3997122, "lon": 8.5508977, "alt": 29.578, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 2, "armed": true}
+{"t": 1793475020.15, "kind": "pos", "lat": 47.3997219, "lon": 8.550921, "alt": 30.507, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475020.244, "kind": "opc", "n": 220.5, "e": 401.3, "alt": 30.5, "mg": 0.065}
+{"t": 1793475020.651, "kind": "pos", "lat": 47.3997338, "lon": 8.5509405, "alt": 29.285, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475021.154, "kind": "pos", "lat": 47.3997574, "lon": 8.5509637, "alt": 29.153, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475021.252, "kind": "opc", "n": 224.5, "e": 404.5, "alt": 29.2, "mg": 0.065}
+{"t": 1793475021.657, "kind": "pos", "lat": 47.3997778, "lon": 8.5509801, "alt": 29.169, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475022.164, "kind": "pos", "lat": 47.3998111, "lon": 8.5510098, "alt": 29.239, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475022.254, "kind": "opc", "n": 230.4, "e": 408.0, "alt": 29.2, "mg": 0.075}
+{"t": 1793475022.671, "kind": "pos", "lat": 47.3998334, "lon": 8.5510295, "alt": 30.35, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475023.179, "kind": "pos", "lat": 47.3998672, "lon": 8.5510592, "alt": 29.227, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475023.26, "kind": "opc", "n": 236.7, "e": 411.7, "alt": 29.2, "mg": 0.077}
+{"t": 1793475023.686, "kind": "pos", "lat": 47.3998901, "lon": 8.5510787, "alt": 30.516, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475024.193, "kind": "pos", "lat": 47.3999254, "lon": 8.5511061, "alt": 29.491, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475024.262, "kind": "opc", "n": 243.2, "e": 415.3, "alt": 29.5, "mg": 0.122}
+{"t": 1793475024.701, "kind": "pos", "lat": 47.3999488, "lon": 8.551124, "alt": 30.029, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475025.202, "kind": "pos", "lat": 47.399984, "lon": 8.5511513, "alt": 31.133, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475025.262, "kind": "opc", "n": 249.7, "e": 418.7, "alt": 31.1, "mg": 0.102}
+{"t": 1793475025.704, "kind": "pos", "lat": 47.4000076, "lon": 8.5511695, "alt": 29.943, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475026.205, "kind": "pos", "lat": 47.4000436, "lon": 8.5511965, "alt": 28.927, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475026.266, "kind": "opc", "n": 256.3, "e": 422.1, "alt": 28.9, "mg": 0.122}
+{"t": 1793475026.713, "kind": "pos", "lat": 47.4000677, "lon": 8.5512147, "alt": 30.998, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475027.214, "kind": "pos", "lat": 47.4001035, "lon": 8.551243, "alt": 31.067, "mode": "mission", "state": "ENROUTE", "batt": 96.0, "seq": 3, "armed": true}
+{"t": 1793475027.267, "kind": "opc", "n": 263.0, "e": 425.6, "alt": 31.1, "mg": 0.156}
+{"t": 1793475027.717, "kind": "pos", "lat": 47.4001281, "lon": 8.5512622, "alt": 31.093, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 3, "armed": true}
+{"t": 1793475028.221, "kind": "pos", "lat": 47.4001647, "lon": 8.5512922, "alt": 30.212, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 3, "armed": true}
+{"t": 1793475028.269, "kind": "opc", "n": 269.8, "e": 429.3, "alt": 30.2, "mg": 0.212}
+{"t": 1793475028.722, "kind": "pos", "lat": 47.4001892, "lon": 8.5513114, "alt": 30.278, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 3, "armed": true}
+{"t": 1793475029.224, "kind": "pos", "lat": 47.4002264, "lon": 8.55134, "alt": 30.219, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 3, "armed": true}
+{"t": 1793475029.27, "kind": "opc", "n": 276.7, "e": 432.9, "alt": 30.2, "mg": 0.248}
+{"t": 1793475029.27, "kind": "event", "code": "ASH", "text": "OPC 0.25 mg/m3 (edge); estimate EST1 r=60 m drifting 4.0 m/s (forecast wind)", "state": "ENROUTE"}
+{"t": 1793475029.328, "kind": "plan", "route": [[276.7, 432.9, 30.2], [260.0, 420.0, 30.2], [260.0, 420.0, 110.0], [440.0, 420.0, 110.0], [650.1, 649.9, 40.0]], "hold": false, "ms": 47.9, "items": 6}
+{"t": 1793475029.328, "kind": "event", "code": "MISSION", "text": "4 waypoints, planned in 48 ms", "state": "ENROUTE"}
+{"t": 1793475031.185, "kind": "event", "code": "REPLAN", "text": "ash ahead from onboard sensor; new route live in 1915 ms", "state": "ENROUTE"}
+{"t": 1793475031.543, "kind": "plan", "route": [[287.3, 438.7, 30.5], [260.0, 440.0, 30.5], [260.0, 440.0, 110.0], [460.0, 440.0, 110.0], [650.1, 649.9, 40.0]], "hold": false, "ms": 31.1, "items": 6}
+{"t": 1793475031.544, "kind": "event", "code": "MISSION", "text": "4 waypoints, planned in 31 ms", "state": "ENROUTE"}
+{"t": 1793475031.55, "kind": "event", "code": "REPLAN", "text": "route conflict: leg 1 crosses EST1; new route live in 48 ms", "state": "ENROUTE"}
+{"t": 1793475031.558, "kind": "pos", "lat": 47.4003341, "lon": 8.5514292, "alt": 30.723, "mode": "hold", "state": "ENROUTE", "batt": 95.0, "seq": 0, "armed": true}
+{"t": 1793475031.558, "kind": "opc", "n": 288.7, "e": 439.6, "alt": 30.7, "mg": 0.278}
+{"t": 1793475032.058, "kind": "pos", "lat": 47.4003458, "lon": 8.551442, "alt": 30.729, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 0, "armed": true}
+{"t": 1793475032.558, "kind": "opc", "n": 290.3, "e": 440.9, "alt": 30.7, "mg": 0.318}
+{"t": 1793475032.567, "kind": "pos", "lat": 47.4003489, "lon": 8.5514461, "alt": 30.717, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475033.068, "kind": "pos", "lat": 47.4003469, "lon": 8.5514475, "alt": 31.891, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475033.562, "kind": "opc", "n": 289.8, "e": 441.0, "alt": 30.7, "mg": 0.271}
+{"t": 1793475033.571, "kind": "pos", "lat": 47.400344, "lon": 8.5514475, "alt": 30.663, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475034.079, "kind": "pos", "lat": 47.4003399, "lon": 8.5514466, "alt": 30.64, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475034.569, "kind": "opc", "n": 289.0, "e": 440.9, "alt": 30.7, "mg": 0.243}
+{"t": 1793475034.581, "kind": "pos", "lat": 47.400337, "lon": 8.5514461, "alt": 30.656, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475035.085, "kind": "pos", "lat": 47.4003346, "lon": 8.5514449, "alt": 30.685, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475035.57, "kind": "opc", "n": 288.2, "e": 440.6, "alt": 30.7, "mg": 0.186}
+{"t": 1793475035.586, "kind": "pos", "lat": 47.4003301, "lon": 8.5514427, "alt": 30.736, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475036.094, "kind": "pos", "lat": 47.4003255, "lon": 8.5514408, "alt": 30.741, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475036.571, "kind": "opc", "n": 286.6, "e": 440.3, "alt": 32.3, "mg": 0.174}
+{"t": 1793475036.596, "kind": "pos", "lat": 47.4003154, "lon": 8.5514382, "alt": 32.318, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475037.096, "kind": "pos", "lat": 47.4003064, "lon": 8.5514379, "alt": 31.222, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475037.572, "kind": "opc", "n": 283.6, "e": 440.3, "alt": 29.9, "mg": 0.158}
+{"t": 1793475037.601, "kind": "pos", "lat": 47.400289, "lon": 8.5514382, "alt": 29.939, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475038.104, "kind": "pos", "lat": 47.4002748, "lon": 8.5514383, "alt": 31.108, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475038.58, "kind": "opc", "n": 279.3, "e": 440.4, "alt": 31.0, "mg": 0.141}
+{"t": 1793475038.605, "kind": "pos", "lat": 47.4002496, "lon": 8.5514393, "alt": 31.02, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475039.105, "kind": "pos", "lat": 47.400231, "lon": 8.5514397, "alt": 30.912, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475039.584, "kind": "opc", "n": 274.0, "e": 440.5, "alt": 30.8, "mg": 0.101}
+{"t": 1793475039.608, "kind": "pos", "lat": 47.4002023, "lon": 8.5514407, "alt": 30.829, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475040.109, "kind": "pos", "lat": 47.4001841, "lon": 8.5514422, "alt": 30.758, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475040.584, "kind": "opc", "n": 270.1, "e": 440.7, "alt": 29.8, "mg": 0.088}
+{"t": 1793475040.612, "kind": "pos", "lat": 47.4001601, "lon": 8.5514439, "alt": 31.114, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475041.113, "kind": "pos", "lat": 47.4001459, "lon": 8.5514435, "alt": 29.962, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475041.587, "kind": "opc", "n": 266.3, "e": 440.6, "alt": 31.0, "mg": 0.069}
+{"t": 1793475041.616, "kind": "pos", "lat": 47.4001277, "lon": 8.5514421, "alt": 29.881, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 1, "armed": true}
+{"t": 1793475042.116, "kind": "pos", "lat": 47.4001175, "lon": 8.5514415, "alt": 31.451, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 2, "armed": true}
+{"t": 1793475042.591, "kind": "opc", "n": 263.6, "e": 440.5, "alt": 30.3, "mg": 0.05}
+{"t": 1793475042.62, "kind": "pos", "lat": 47.4001088, "lon": 8.5514406, "alt": 30.32, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 2, "armed": true}
+{"t": 1793475043.121, "kind": "pos", "lat": 47.400099, "lon": 8.5514376, "alt": 31.136, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 2, "armed": true}
+{"t": 1793475043.593, "kind": "opc", "n": 262.1, "e": 440.1, "alt": 31.0, "mg": 0.045}
+{"t": 1793475043.621, "kind": "pos", "lat": 47.4000957, "lon": 8.5514351, "alt": 31.046, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 2, "armed": true}
+{"t": 1793475044.123, "kind": "pos", "lat": 47.4000931, "lon": 8.5514315, "alt": 33.868, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 2, "armed": true}
+{"t": 1793475044.596, "kind": "opc", "n": 261.7, "e": 439.6, "alt": 34.9, "mg": 0.065}
+{"t": 1793475044.624, "kind": "pos", "lat": 47.4000919, "lon": 8.5514292, "alt": 34.929, "mode": "mission", "state": "ENROUTE", "batt": 95.0, "seq": 2, "armed": true}
+{"t": 1793475045.124, "kind": "pos", "lat": 47.4000908, "lon": 8.5514277, "alt": 36.519, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475045.6, "kind": "opc", "n": 261.6, "e": 439.4, "alt": 37.6, "mg": 0.035}
+{"t": 1793475045.628, "kind": "pos", "lat": 47.4000906, "lon": 8.551427, "alt": 37.562, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475046.132, "kind": "pos", "lat": 47.4000909, "lon": 8.5514266, "alt": 39.171, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475046.6, "kind": "opc", "n": 261.7, "e": 439.5, "alt": 40.6, "mg": 0.06}
+{"t": 1793475046.633, "kind": "pos", "lat": 47.4000916, "lon": 8.5514275, "alt": 40.582, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475047.139, "kind": "pos", "lat": 47.4000922, "lon": 8.5514275, "alt": 42.058, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475047.607, "kind": "opc", "n": 261.8, "e": 439.5, "alt": 42.8, "mg": 0.044}
+{"t": 1793475047.647, "kind": "pos", "lat": 47.4000926, "lon": 8.5514275, "alt": 42.789, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475048.154, "kind": "pos", "lat": 47.4000932, "lon": 8.551428, "alt": 44.467, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475048.607, "kind": "opc", "n": 261.9, "e": 439.6, "alt": 45.5, "mg": 0.038}
+{"t": 1793475048.655, "kind": "pos", "lat": 47.4000933, "lon": 8.5514296, "alt": 45.5, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475049.158, "kind": "pos", "lat": 47.4000929, "lon": 8.551432, "alt": 47.101, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475049.61, "kind": "opc", "n": 261.8, "e": 439.8, "alt": 49.4, "mg": 0.05}
+{"t": 1793475049.659, "kind": "pos", "lat": 47.4000931, "lon": 8.5514323, "alt": 49.386, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475050.16, "kind": "pos", "lat": 47.4000929, "lon": 8.5514325, "alt": 48.98, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475050.614, "kind": "opc", "n": 261.7, "e": 439.9, "alt": 51.2, "mg": 0.035}
+{"t": 1793475050.663, "kind": "pos", "lat": 47.4000923, "lon": 8.5514333, "alt": 51.174, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475051.17, "kind": "pos", "lat": 47.400092, "lon": 8.5514342, "alt": 52.32, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475051.62, "kind": "opc", "n": 261.6, "e": 440.0, "alt": 53.7, "mg": 0.048}
+{"t": 1793475051.673, "kind": "pos", "lat": 47.4000914, "lon": 8.5514345, "alt": 53.741, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475052.176, "kind": "pos", "lat": 47.4000906, "lon": 8.551435, "alt": 54.955, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475052.627, "kind": "opc", "n": 261.5, "e": 440.1, "alt": 56.1, "mg": 0.045}
+{"t": 1793475052.68, "kind": "pos", "lat": 47.4000896, "lon": 8.551436, "alt": 56.644, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475053.18, "kind": "pos", "lat": 47.4000892, "lon": 8.5514359, "alt": 57.787, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475053.627, "kind": "opc", "n": 261.3, "e": 440.1, "alt": 59.0, "mg": 0.05}
+{"t": 1793475053.683, "kind": "pos", "lat": 47.4000884, "lon": 8.5514363, "alt": 59.558, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475054.184, "kind": "pos", "lat": 47.4000881, "lon": 8.5514369, "alt": 60.704, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475054.63, "kind": "opc", "n": 261.3, "e": 440.2, "alt": 61.9, "mg": 0.037}
+{"t": 1793475054.687, "kind": "pos", "lat": 47.4000879, "lon": 8.5514374, "alt": 62.445, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475055.191, "kind": "pos", "lat": 47.4000876, "lon": 8.5514381, "alt": 63.641, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475055.634, "kind": "opc", "n": 261.2, "e": 440.2, "alt": 64.7, "mg": 0.045}
+{"t": 1793475055.699, "kind": "pos", "lat": 47.4000869, "lon": 8.5514371, "alt": 65.329, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475056.199, "kind": "pos", "lat": 47.4000867, "lon": 8.5514349, "alt": 66.512, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475056.635, "kind": "opc", "n": 261.1, "e": 440.0, "alt": 67.7, "mg": 0.043}
+{"t": 1793475056.7, "kind": "pos", "lat": 47.4000864, "lon": 8.551434, "alt": 67.702, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475057.203, "kind": "pos", "lat": 47.4000857, "lon": 8.5514344, "alt": 69.505, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475057.636, "kind": "opc", "n": 261.0, "e": 440.1, "alt": 70.7, "mg": 0.04}
+{"t": 1793475057.706, "kind": "pos", "lat": 47.4000854, "lon": 8.5514354, "alt": 70.742, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475058.21, "kind": "pos", "lat": 47.4000851, "lon": 8.551437, "alt": 72.558, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475058.638, "kind": "opc", "n": 260.9, "e": 440.2, "alt": 73.7, "mg": 0.049}
+{"t": 1793475058.715, "kind": "pos", "lat": 47.4000847, "lon": 8.5514375, "alt": 73.735, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475059.223, "kind": "pos", "lat": 47.4000837, "lon": 8.5514387, "alt": 75.575, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475059.641, "kind": "opc", "n": 260.7, "e": 440.3, "alt": 76.8, "mg": 0.042}
+{"t": 1793475059.73, "kind": "pos", "lat": 47.400083, "lon": 8.5514388, "alt": 76.809, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475060.232, "kind": "pos", "lat": 47.4000821, "lon": 8.5514373, "alt": 78.646, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475060.641, "kind": "opc", "n": 260.5, "e": 440.1, "alt": 79.9, "mg": 0.05}
+{"t": 1793475060.735, "kind": "pos", "lat": 47.4000813, "lon": 8.5514358, "alt": 79.905, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475061.237, "kind": "pos", "lat": 47.4000804, "lon": 8.5514337, "alt": 81.819, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475061.644, "kind": "opc", "n": 260.4, "e": 439.9, "alt": 83.1, "mg": 0.028}
+{"t": 1793475061.738, "kind": "pos", "lat": 47.4000803, "lon": 8.5514335, "alt": 83.11, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475062.24, "kind": "pos", "lat": 47.4000805, "lon": 8.5514339, "alt": 84.998, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475062.647, "kind": "opc", "n": 260.5, "e": 440.0, "alt": 86.2, "mg": 0.052}
+{"t": 1793475062.74, "kind": "pos", "lat": 47.4000807, "lon": 8.5514346, "alt": 86.249, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475063.242, "kind": "pos", "lat": 47.4000808, "lon": 8.5514346, "alt": 87.508, "mode": "mission", "state": "ENROUTE", "batt": 94.0, "seq": 2, "armed": true}
+{"t": 1793475063.648, "kind": "opc", "n": 260.4, "e": 440.0, "alt": 88.8, "mg": 0.041}
+{"t": 1793475063.745, "kind": "pos", "lat": 47.4000802, "lon": 8.5514345, "alt": 89.454, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475064.249, "kind": "pos", "lat": 47.4000799, "lon": 8.5514338, "alt": 90.759, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475064.653, "kind": "opc", "n": 260.3, "e": 440.0, "alt": 92.1, "mg": 0.042}
+{"t": 1793475064.754, "kind": "pos", "lat": 47.4000793, "lon": 8.5514343, "alt": 92.658, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475065.255, "kind": "pos", "lat": 47.4000793, "lon": 8.5514346, "alt": 93.977, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475065.655, "kind": "opc", "n": 260.3, "e": 440.0, "alt": 95.3, "mg": 0.05}
+{"t": 1793475065.756, "kind": "pos", "lat": 47.4000789, "lon": 8.551434, "alt": 96.014, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475066.263, "kind": "pos", "lat": 47.4000785, "lon": 8.5514344, "alt": 97.388, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475066.655, "kind": "opc", "n": 260.2, "e": 440.1, "alt": 98.8, "mg": 0.046}
+{"t": 1793475066.765, "kind": "pos", "lat": 47.4000781, "lon": 8.5514351, "alt": 98.803, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475067.266, "kind": "pos", "lat": 47.4000774, "lon": 8.551436, "alt": 100.81, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475067.655, "kind": "opc", "n": 260.1, "e": 440.2, "alt": 102.2, "mg": 0.042}
+{"t": 1793475067.77, "kind": "pos", "lat": 47.4000772, "lon": 8.5514368, "alt": 102.158, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475068.271, "kind": "pos", "lat": 47.4000769, "lon": 8.5514366, "alt": 104.132, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475068.657, "kind": "opc", "n": 260.0, "e": 440.1, "alt": 105.4, "mg": 0.05}
+{"t": 1793475068.772, "kind": "pos", "lat": 47.4000765, "lon": 8.5514353, "alt": 105.376, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475069.276, "kind": "pos", "lat": 47.4000765, "lon": 8.5514334, "alt": 106.781, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475069.66, "kind": "opc", "n": 260.0, "e": 439.9, "alt": 107.5, "mg": 0.05}
+{"t": 1793475069.778, "kind": "pos", "lat": 47.4000762, "lon": 8.5514325, "alt": 107.538, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475070.279, "kind": "pos", "lat": 47.4000762, "lon": 8.5514332, "alt": 108.298, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475070.66, "kind": "opc", "n": 259.9, "e": 440.0, "alt": 108.7, "mg": 0.049}
+{"t": 1793475070.782, "kind": "pos", "lat": 47.4000761, "lon": 8.5514342, "alt": 108.698, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475071.283, "kind": "pos", "lat": 47.4000761, "lon": 8.551435, "alt": 109.144, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475071.662, "kind": "opc", "n": 259.9, "e": 440.0, "alt": 109.4, "mg": 0.039}
+{"t": 1793475071.783, "kind": "pos", "lat": 47.4000761, "lon": 8.5514348, "alt": 109.406, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 2, "armed": true}
+{"t": 1793475072.29, "kind": "pos", "lat": 47.4000783, "lon": 8.5514344, "alt": 109.637, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475072.664, "kind": "opc", "n": 260.4, "e": 440.0, "alt": 109.7, "mg": 0.051}
+{"t": 1793475072.79, "kind": "pos", "lat": 47.4000831, "lon": 8.5514344, "alt": 109.772, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475073.292, "kind": "pos", "lat": 47.4000963, "lon": 8.5514364, "alt": 109.863, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475073.667, "kind": "opc", "n": 262.8, "e": 440.2, "alt": 109.9, "mg": 0.053}
+{"t": 1793475073.799, "kind": "pos", "lat": 47.4001085, "lon": 8.5514373, "alt": 109.869, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475074.301, "kind": "pos", "lat": 47.4001231, "lon": 8.5514382, "alt": 109.845, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475074.668, "kind": "opc", "n": 267.1, "e": 440.4, "alt": 109.8, "mg": 0.039}
+{"t": 1793475074.802, "kind": "pos", "lat": 47.4001495, "lon": 8.5514404, "alt": 109.826, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475075.304, "kind": "pos", "lat": 47.4001696, "lon": 8.5514417, "alt": 109.775, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475075.669, "kind": "opc", "n": 272.7, "e": 440.6, "alt": 109.7, "mg": 0.035}
+{"t": 1793475075.805, "kind": "pos", "lat": 47.4002024, "lon": 8.5514418, "alt": 109.673, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475076.31, "kind": "pos", "lat": 47.4002241, "lon": 8.5514396, "alt": 109.697, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475076.672, "kind": "opc", "n": 278.8, "e": 440.2, "alt": 109.7, "mg": 0.022}
+{"t": 1793475076.814, "kind": "pos", "lat": 47.4002455, "lon": 8.5514374, "alt": 109.706, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475077.316, "kind": "pos", "lat": 47.4002786, "lon": 8.551434, "alt": 109.685, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475077.675, "kind": "opc", "n": 285.0, "e": 439.8, "alt": 109.7, "mg": 0.022}
+{"t": 1793475077.821, "kind": "pos", "lat": 47.4003012, "lon": 8.5514315, "alt": 109.716, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475078.322, "kind": "pos", "lat": 47.4003371, "lon": 8.5514293, "alt": 109.738, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475078.676, "kind": "opc", "n": 291.6, "e": 439.6, "alt": 109.8, "mg": 0.023}
+{"t": 1793475078.822, "kind": "pos", "lat": 47.4003606, "lon": 8.5514291, "alt": 109.769, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475079.33, "kind": "pos", "lat": 47.4003952, "lon": 8.551431, "alt": 109.782, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475079.68, "kind": "opc", "n": 298.0, "e": 439.8, "alt": 109.7, "mg": 0.017}
+{"t": 1793475079.83, "kind": "pos", "lat": 47.4004184, "lon": 8.5514319, "alt": 109.744, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475080.332, "kind": "pos", "lat": 47.4004544, "lon": 8.5514325, "alt": 109.712, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475080.681, "kind": "opc", "n": 303.4, "e": 439.9, "alt": 109.7, "mg": 0.027}
+{"t": 1793475080.835, "kind": "pos", "lat": 47.4004781, "lon": 8.5514331, "alt": 109.687, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475081.336, "kind": "pos", "lat": 47.4005152, "lon": 8.5514329, "alt": 109.657, "mode": "mission", "state": "ENROUTE", "batt": 93.0, "seq": 3, "armed": true}
+{"t": 1793475081.682, "kind": "opc", "n": 310.2, "e": 439.9, "alt": 109.6, "mg": 0.009}
+{"t": 1793475081.84, "kind": "pos", "lat": 47.4005396, "lon": 8.551433, "alt": 109.599, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475082.341, "kind": "pos", "lat": 47.4005768, "lon": 8.5514322, "alt": 109.539, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475082.684, "kind": "opc", "n": 317.0, "e": 439.8, "alt": 109.5, "mg": 0.01}
+{"t": 1793475082.842, "kind": "pos", "lat": 47.4006015, "lon": 8.5514319, "alt": 109.54, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475083.343, "kind": "pos", "lat": 47.4006264, "lon": 8.5514319, "alt": 109.544, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475083.684, "kind": "opc", "n": 324.0, "e": 439.8, "alt": 109.6, "mg": 0.019}
+{"t": 1793475083.846, "kind": "pos", "lat": 47.4006643, "lon": 8.5514319, "alt": 109.605, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475084.347, "kind": "pos", "lat": 47.4006894, "lon": 8.5514314, "alt": 109.619, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475084.685, "kind": "opc", "n": 330.9, "e": 439.8, "alt": 109.6, "mg": 0.006}
+{"t": 1793475084.847, "kind": "pos", "lat": 47.4007262, "lon": 8.5514311, "alt": 109.546, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475085.35, "kind": "pos", "lat": 47.4007521, "lon": 8.5514314, "alt": 109.545, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475085.69, "kind": "opc", "n": 338.0, "e": 439.8, "alt": 109.6, "mg": 0.004}
+{"t": 1793475085.852, "kind": "pos", "lat": 47.4007905, "lon": 8.5514324, "alt": 109.603, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475086.36, "kind": "pos", "lat": 47.4008155, "lon": 8.5514325, "alt": 109.613, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475086.694, "kind": "opc", "n": 345.2, "e": 439.9, "alt": 109.6, "mg": 0.007}
+{"t": 1793475086.868, "kind": "pos", "lat": 47.4008551, "lon": 8.5514327, "alt": 109.598, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475087.37, "kind": "pos", "lat": 47.4008819, "lon": 8.5514327, "alt": 109.622, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475087.696, "kind": "opc", "n": 352.6, "e": 439.9, "alt": 109.7, "mg": 0.018}
+{"t": 1793475087.874, "kind": "pos", "lat": 47.4009209, "lon": 8.5514331, "alt": 109.663, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475088.376, "kind": "pos", "lat": 47.4009471, "lon": 8.5514327, "alt": 109.641, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475088.702, "kind": "opc", "n": 359.8, "e": 439.8, "alt": 109.6, "mg": 0.015}
+{"t": 1793475088.876, "kind": "pos", "lat": 47.4009871, "lon": 8.5514322, "alt": 109.656, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475089.376, "kind": "pos", "lat": 47.4010138, "lon": 8.551432, "alt": 109.645, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475089.702, "kind": "opc", "n": 367.2, "e": 439.9, "alt": 109.6, "mg": 0.02}
+{"t": 1793475089.878, "kind": "pos", "lat": 47.4010541, "lon": 8.5514329, "alt": 109.607, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475090.38, "kind": "pos", "lat": 47.4010809, "lon": 8.5514331, "alt": 109.621, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475090.702, "kind": "opc", "n": 374.8, "e": 439.9, "alt": 109.6, "mg": 0.006}
+{"t": 1793475090.883, "kind": "pos", "lat": 47.4011222, "lon": 8.5514336, "alt": 109.605, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475091.391, "kind": "pos", "lat": 47.4011507, "lon": 8.5514342, "alt": 109.579, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475091.703, "kind": "opc", "n": 382.7, "e": 440.1, "alt": 109.6, "mg": 0.013}
+{"t": 1793475091.891, "kind": "pos", "lat": 47.4011788, "lon": 8.5514353, "alt": 109.559, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475092.391, "kind": "pos", "lat": 47.4012209, "lon": 8.5514363, "alt": 109.574, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475092.704, "kind": "opc", "n": 389.0, "e": 440.1, "alt": 109.6, "mg": 0.01}
+{"t": 1793475092.895, "kind": "pos", "lat": 47.4012491, "lon": 8.5514357, "alt": 109.623, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475093.396, "kind": "pos", "lat": 47.4012914, "lon": 8.5514348, "alt": 109.62, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475093.712, "kind": "opc", "n": 396.8, "e": 440.0, "alt": 109.6, "mg": 0.002}
+{"t": 1793475093.9, "kind": "pos", "lat": 47.4013199, "lon": 8.5514342, "alt": 109.647, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475094.404, "kind": "pos", "lat": 47.4013629, "lon": 8.5514327, "alt": 109.72, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475094.714, "kind": "opc", "n": 404.7, "e": 439.8, "alt": 109.7, "mg": 0.002}
+{"t": 1793475094.907, "kind": "pos", "lat": 47.4013919, "lon": 8.551432, "alt": 109.692, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475095.407, "kind": "pos", "lat": 47.4014348, "lon": 8.5514327, "alt": 109.671, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475095.716, "kind": "opc", "n": 412.9, "e": 439.9, "alt": 109.7, "mg": 0.007}
+{"t": 1793475095.909, "kind": "pos", "lat": 47.4014643, "lon": 8.5514329, "alt": 109.699, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475096.409, "kind": "pos", "lat": 47.4015084, "lon": 8.5514337, "alt": 109.748, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475096.719, "kind": "opc", "n": 420.9, "e": 439.9, "alt": 109.8, "mg": 0.005}
+{"t": 1793475096.913, "kind": "pos", "lat": 47.4015376, "lon": 8.5514327, "alt": 109.757, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475097.418, "kind": "pos", "lat": 47.4015816, "lon": 8.5514318, "alt": 109.753, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475097.722, "kind": "opc", "n": 429.1, "e": 439.8, "alt": 109.8, "mg": 0.015}
+{"t": 1793475097.925, "kind": "pos", "lat": 47.4016107, "lon": 8.5514319, "alt": 109.755, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475098.426, "kind": "pos", "lat": 47.401655, "lon": 8.5514316, "alt": 109.815, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475098.723, "kind": "opc", "n": 437.3, "e": 439.8, "alt": 109.8, "mg": 0.002}
+{"t": 1793475098.927, "kind": "pos", "lat": 47.4016842, "lon": 8.5514314, "alt": 109.866, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475099.428, "kind": "pos", "lat": 47.4017128, "lon": 8.5514304, "alt": 109.912, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475099.73, "kind": "opc", "n": 445.2, "e": 439.6, "alt": 109.9, "mg": 0.015}
+{"t": 1793475099.933, "kind": "pos", "lat": 47.4017537, "lon": 8.5514296, "alt": 109.934, "mode": "mission", "state": "ENROUTE", "batt": 92.0, "seq": 3, "armed": true}
+{"t": 1793475100.434, "kind": "pos", "lat": 47.4017784, "lon": 8.5514303, "alt": 109.943, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 3, "armed": true}
+{"t": 1793475100.733, "kind": "opc", "n": 451.9, "e": 439.8, "alt": 110.0, "mg": 0.003}
+{"t": 1793475100.936, "kind": "pos", "lat": 47.4018114, "lon": 8.5514318, "alt": 109.95, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 3, "armed": true}
+{"t": 1793475101.438, "kind": "pos", "lat": 47.4018305, "lon": 8.5514319, "alt": 109.942, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 3, "armed": true}
+{"t": 1793475101.735, "kind": "opc", "n": 457.1, "e": 439.8, "alt": 110.0, "mg": 0.014}
+{"t": 1793475101.939, "kind": "pos", "lat": 47.4018555, "lon": 8.5514307, "alt": 109.978, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 3, "armed": true}
+{"t": 1793475102.44, "kind": "pos", "lat": 47.4018703, "lon": 8.5514322, "alt": 109.906, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475102.741, "kind": "opc", "n": 461.2, "e": 440.2, "alt": 109.8, "mg": 0.013}
+{"t": 1793475102.944, "kind": "pos", "lat": 47.4018905, "lon": 8.5514414, "alt": 109.63, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475103.444, "kind": "pos", "lat": 47.4019019, "lon": 8.5514522, "alt": 109.349, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475103.743, "kind": "opc", "n": 464.4, "e": 442.4, "alt": 108.9, "mg": 0.008}
+{"t": 1793475103.947, "kind": "pos", "lat": 47.401918, "lon": 8.5514734, "alt": 108.699, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475104.45, "kind": "pos", "lat": 47.4019302, "lon": 8.5514905, "alt": 108.169, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475104.746, "kind": "opc", "n": 467.1, "e": 444.9, "alt": 107.9, "mg": 0.005}
+{"t": 1793475104.951, "kind": "pos", "lat": 47.4019437, "lon": 8.55151, "alt": 107.597, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475105.452, "kind": "pos", "lat": 47.4019624, "lon": 8.5515393, "alt": 106.818, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475105.746, "kind": "opc", "n": 470.6, "e": 448.7, "alt": 106.6, "mg": 0.002}
+{"t": 1793475105.957, "kind": "pos", "lat": 47.4019746, "lon": 8.551559, "alt": 106.294, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475106.457, "kind": "pos", "lat": 47.4019922, "lon": 8.5515895, "alt": 105.501, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475106.751, "kind": "opc", "n": 473.9, "e": 452.5, "alt": 105.3, "mg": 0.012}
+{"t": 1793475106.958, "kind": "pos", "lat": 47.402003, "lon": 8.5516103, "alt": 104.984, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475107.465, "kind": "pos", "lat": 47.4020203, "lon": 8.5516427, "alt": 104.201, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475107.754, "kind": "opc", "n": 477.0, "e": 456.5, "alt": 103.9, "mg": 0.004}
+{"t": 1793475107.973, "kind": "pos", "lat": 47.4020315, "lon": 8.5516637, "alt": 103.652, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475108.481, "kind": "pos", "lat": 47.4020484, "lon": 8.5516957, "alt": 102.882, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475108.758, "kind": "opc", "n": 480.1, "e": 460.5, "alt": 102.6, "mg": 0.009}
+{"t": 1793475108.981, "kind": "pos", "lat": 47.4020589, "lon": 8.5517167, "alt": 102.356, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475109.483, "kind": "pos", "lat": 47.402075, "lon": 8.5517492, "alt": 101.596, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475109.765, "kind": "opc", "n": 483.0, "e": 464.5, "alt": 101.3, "mg": 0.018}
+{"t": 1793475109.984, "kind": "pos", "lat": 47.402086, "lon": 8.5517709, "alt": 101.076, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475110.485, "kind": "pos", "lat": 47.4021031, "lon": 8.5518018, "alt": 100.325, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475110.766, "kind": "opc", "n": 486.2, "e": 468.4, "alt": 100.1, "mg": 0.006}
+{"t": 1793475110.985, "kind": "pos", "lat": 47.4021145, "lon": 8.551823, "alt": 99.792, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475111.49, "kind": "pos", "lat": 47.4021317, "lon": 8.5518552, "alt": 99.062, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475111.774, "kind": "opc", "n": 489.4, "e": 472.5, "alt": 98.8, "mg": 0.012}
+{"t": 1793475111.997, "kind": "pos", "lat": 47.4021428, "lon": 8.5518761, "alt": 98.542, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475112.5, "kind": "pos", "lat": 47.4021546, "lon": 8.5518983, "alt": 98.006, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475112.776, "kind": "opc", "n": 492.7, "e": 476.6, "alt": 97.5, "mg": 0.007}
+{"t": 1793475113.003, "kind": "pos", "lat": 47.4021733, "lon": 8.5519308, "alt": 97.276, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475113.507, "kind": "pos", "lat": 47.4021858, "lon": 8.551952, "alt": 96.749, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475113.777, "kind": "opc", "n": 496.2, "e": 480.6, "alt": 96.2, "mg": 0.003}
+{"t": 1793475114.014, "kind": "pos", "lat": 47.4022048, "lon": 8.5519847, "alt": 95.979, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475114.514, "kind": "pos", "lat": 47.4022174, "lon": 8.5520059, "alt": 95.461, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475114.779, "kind": "opc", "n": 499.8, "e": 484.7, "alt": 94.9, "mg": 0.005}
+{"t": 1793475115.018, "kind": "pos", "lat": 47.4022378, "lon": 8.5520382, "alt": 94.649, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475115.524, "kind": "pos", "lat": 47.4022511, "lon": 8.5520591, "alt": 94.101, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475115.781, "kind": "opc", "n": 503.6, "e": 488.8, "alt": 93.6, "mg": 0.002}
+{"t": 1793475116.024, "kind": "pos", "lat": 47.4022722, "lon": 8.5520923, "alt": 93.319, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475116.525, "kind": "pos", "lat": 47.4022859, "lon": 8.5521135, "alt": 92.782, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475116.784, "kind": "opc", "n": 507.5, "e": 492.8, "alt": 92.2, "mg": 0.008}
+{"t": 1793475117.028, "kind": "pos", "lat": 47.4023065, "lon": 8.5521455, "alt": 91.944, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475117.532, "kind": "pos", "lat": 47.4023203, "lon": 8.5521674, "alt": 91.389, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475117.787, "kind": "opc", "n": 510.5, "e": 496.1, "alt": 91.1, "mg": 0.018}
+{"t": 1793475118.032, "kind": "pos", "lat": 47.4023408, "lon": 8.5522003, "alt": 90.482, "mode": "mission", "state": "ENROUTE", "batt": 91.0, "seq": 4, "armed": true}
+{"t": 1793475118.534, "kind": "pos", "lat": 47.4023549, "lon": 8.5522225, "alt": 89.957, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475118.789, "kind": "opc", "n": 514.4, "e": 500.2, "alt": 89.7, "mg": 0.002}
+{"t": 1793475119.042, "kind": "pos", "lat": 47.4023757, "lon": 8.5522562, "alt": 89.177, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475119.549, "kind": "pos", "lat": 47.4023897, "lon": 8.5522786, "alt": 88.638, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475119.793, "kind": "opc", "n": 518.3, "e": 504.5, "alt": 88.4, "mg": 0.011}
+{"t": 1793475120.057, "kind": "pos", "lat": 47.4024115, "lon": 8.5523123, "alt": 87.781, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475120.557, "kind": "pos", "lat": 47.4024262, "lon": 8.5523349, "alt": 87.196, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475120.797, "kind": "opc", "n": 522.3, "e": 508.7, "alt": 86.9, "mg": 0.005}
+{"t": 1793475121.06, "kind": "pos", "lat": 47.4024473, "lon": 8.5523684, "alt": 86.298, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475121.562, "kind": "pos", "lat": 47.4024615, "lon": 8.5523915, "alt": 85.71, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475121.798, "kind": "opc", "n": 526.2, "e": 513.0, "alt": 85.4, "mg": 0.003}
+{"t": 1793475122.07, "kind": "pos", "lat": 47.4024826, "lon": 8.5524261, "alt": 84.869, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475122.577, "kind": "pos", "lat": 47.4024962, "lon": 8.5524495, "alt": 84.362, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475122.8, "kind": "opc", "n": 530.1, "e": 517.4, "alt": 84.1, "mg": 0.03}
+{"t": 1793475123.084, "kind": "pos", "lat": 47.4025167, "lon": 8.5524842, "alt": 83.546, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475123.586, "kind": "pos", "lat": 47.4025309, "lon": 8.5525067, "alt": 82.977, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475123.801, "kind": "opc", "n": 534.0, "e": 521.6, "alt": 82.7, "mg": 0.009}
+{"t": 1793475124.089, "kind": "pos", "lat": 47.402545, "lon": 8.5525293, "alt": 82.415, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475124.59, "kind": "pos", "lat": 47.4025653, "lon": 8.5525641, "alt": 81.588, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475124.805, "kind": "opc", "n": 537.8, "e": 526.0, "alt": 81.3, "mg": 0.009}
+{"t": 1793475125.097, "kind": "pos", "lat": 47.4025789, "lon": 8.5525871, "alt": 81.039, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475125.598, "kind": "pos", "lat": 47.4026001, "lon": 8.552621, "alt": 80.163, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475125.809, "kind": "opc", "n": 541.7, "e": 530.2, "alt": 79.9, "mg": 0.005}
+{"t": 1793475126.101, "kind": "pos", "lat": 47.4026148, "lon": 8.5526431, "alt": 79.57, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475126.603, "kind": "pos", "lat": 47.4026361, "lon": 8.5526769, "alt": 78.696, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475126.812, "kind": "opc", "n": 545.7, "e": 534.5, "alt": 78.4, "mg": 0.005}
+{"t": 1793475127.104, "kind": "pos", "lat": 47.4026502, "lon": 8.5527, "alt": 78.113, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475127.605, "kind": "pos", "lat": 47.4026707, "lon": 8.5527342, "alt": 77.257, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475127.813, "kind": "opc", "n": 549.6, "e": 538.8, "alt": 77.0, "mg": 0.003}
+{"t": 1793475128.107, "kind": "pos", "lat": 47.4026847, "lon": 8.5527579, "alt": 76.687, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475128.608, "kind": "pos", "lat": 47.4027053, "lon": 8.5527922, "alt": 75.875, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475128.814, "kind": "opc", "n": 553.4, "e": 543.2, "alt": 75.6, "mg": 0.021}
+{"t": 1793475129.111, "kind": "pos", "lat": 47.4027188, "lon": 8.5528156, "alt": 75.323, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475129.618, "kind": "pos", "lat": 47.4027393, "lon": 8.5528498, "alt": 74.462, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475129.822, "kind": "opc", "n": 557.2, "e": 547.6, "alt": 74.1, "mg": 0.022}
+{"t": 1793475130.119, "kind": "pos", "lat": 47.4027535, "lon": 8.5528735, "alt": 73.853, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475130.62, "kind": "pos", "lat": 47.4027738, "lon": 8.5529089, "alt": 73.03, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475130.826, "kind": "opc", "n": 561.1, "e": 552.0, "alt": 72.7, "mg": 0.015}
+{"t": 1793475131.123, "kind": "pos", "lat": 47.402788, "lon": 8.5529329, "alt": 72.462, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475131.623, "kind": "pos", "lat": 47.4028015, "lon": 8.5529554, "alt": 71.898, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475131.828, "kind": "opc", "n": 564.1, "e": 555.5, "alt": 71.6, "mg": 0.007}
+{"t": 1793475132.125, "kind": "pos", "lat": 47.4028225, "lon": 8.5529894, "alt": 71.022, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475132.63, "kind": "pos", "lat": 47.4028372, "lon": 8.5530129, "alt": 70.444, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475132.833, "kind": "opc", "n": 568.1, "e": 559.8, "alt": 70.2, "mg": 0.004}
+{"t": 1793475133.134, "kind": "pos", "lat": 47.4028585, "lon": 8.553048, "alt": 69.624, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475133.637, "kind": "pos", "lat": 47.402873, "lon": 8.5530711, "alt": 69.066, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475133.84, "kind": "opc", "n": 572.1, "e": 564.2, "alt": 68.8, "mg": 0.016}
+{"t": 1793475134.138, "kind": "pos", "lat": 47.4028947, "lon": 8.5531054, "alt": 68.174, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475134.641, "kind": "pos", "lat": 47.4029089, "lon": 8.5531281, "alt": 67.565, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475134.845, "kind": "opc", "n": 576.1, "e": 568.5, "alt": 67.2, "mg": 0.005}
+{"t": 1793475135.142, "kind": "pos", "lat": 47.4029305, "lon": 8.5531639, "alt": 66.615, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475135.643, "kind": "pos", "lat": 47.4029441, "lon": 8.5531871, "alt": 66.028, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475135.846, "kind": "opc", "n": 580.0, "e": 573.0, "alt": 65.7, "mg": 0.006}
+{"t": 1793475136.145, "kind": "pos", "lat": 47.4029654, "lon": 8.5532233, "alt": 65.11, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475136.653, "kind": "pos", "lat": 47.4029793, "lon": 8.5532471, "alt": 64.524, "mode": "mission", "state": "ENROUTE", "batt": 90.0, "seq": 4, "armed": true}
+{"t": 1793475136.849, "kind": "opc", "n": 583.9, "e": 577.4, "alt": 64.2, "mg": 0.005}
+{"t": 1793475137.154, "kind": "pos", "lat": 47.4030012, "lon": 8.5532816, "alt": 63.657, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475137.654, "kind": "pos", "lat": 47.4030156, "lon": 8.5533037, "alt": 63.089, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475137.856, "kind": "opc", "n": 588.0, "e": 581.8, "alt": 62.8, "mg": 0.01}
+{"t": 1793475138.161, "kind": "pos", "lat": 47.4030375, "lon": 8.553338, "alt": 62.228, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475138.665, "kind": "pos", "lat": 47.4030519, "lon": 8.5533617, "alt": 61.599, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475138.86, "kind": "opc", "n": 592.0, "e": 586.1, "alt": 61.3, "mg": 0.007}
+{"t": 1793475139.168, "kind": "pos", "lat": 47.4030662, "lon": 8.5533842, "alt": 60.952, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475139.668, "kind": "pos", "lat": 47.4030889, "lon": 8.5534185, "alt": 60.007, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475139.864, "kind": "opc", "n": 596.1, "e": 590.3, "alt": 59.7, "mg": 0.004}
+{"t": 1793475140.17, "kind": "pos", "lat": 47.4031038, "lon": 8.5534413, "alt": 59.416, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475140.67, "kind": "pos", "lat": 47.4031263, "lon": 8.5534765, "alt": 58.6, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475140.872, "kind": "opc", "n": 600.3, "e": 594.8, "alt": 58.3, "mg": 0.01}
+{"t": 1793475141.178, "kind": "pos", "lat": 47.4031408, "lon": 8.5534993, "alt": 58.038, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475141.685, "kind": "pos", "lat": 47.4031634, "lon": 8.5535349, "alt": 57.194, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475141.872, "kind": "opc", "n": 604.4, "e": 599.2, "alt": 56.9, "mg": 0.003}
+{"t": 1793475142.185, "kind": "pos", "lat": 47.4031781, "lon": 8.5535583, "alt": 56.621, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475142.689, "kind": "pos", "lat": 47.4032001, "lon": 8.5535934, "alt": 55.779, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475142.872, "kind": "opc", "n": 608.5, "e": 603.6, "alt": 55.5, "mg": 0.006}
+{"t": 1793475143.192, "kind": "pos", "lat": 47.4032144, "lon": 8.5536167, "alt": 55.252, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475143.693, "kind": "pos", "lat": 47.403236, "lon": 8.5536525, "alt": 54.369, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475143.873, "kind": "opc", "n": 612.5, "e": 608.1, "alt": 54.1, "mg": 0.007}
+{"t": 1793475144.196, "kind": "pos", "lat": 47.4032507, "lon": 8.5536768, "alt": 53.782, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475144.702, "kind": "pos", "lat": 47.4032733, "lon": 8.5537126, "alt": 52.964, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475144.876, "kind": "opc", "n": 615.9, "e": 611.7, "alt": 53.0, "mg": 0.01}
+{"t": 1793475145.202, "kind": "pos", "lat": 47.4032888, "lon": 8.5537365, "alt": 52.397, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475145.706, "kind": "pos", "lat": 47.4033112, "lon": 8.5537709, "alt": 51.479, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475145.88, "kind": "opc", "n": 620.1, "e": 616.1, "alt": 51.5, "mg": 0.009}
+{"t": 1793475146.211, "kind": "pos", "lat": 47.4033255, "lon": 8.5537952, "alt": 50.871, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475146.712, "kind": "pos", "lat": 47.4033396, "lon": 8.5538189, "alt": 50.317, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475146.883, "kind": "opc", "n": 624.0, "e": 620.6, "alt": 50.0, "mg": 0.003}
+{"t": 1793475147.212, "kind": "pos", "lat": 47.4033614, "lon": 8.5538555, "alt": 49.434, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475147.718, "kind": "pos", "lat": 47.4033757, "lon": 8.5538795, "alt": 48.849, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475147.884, "kind": "opc", "n": 628.0, "e": 625.2, "alt": 48.5, "mg": 0.003}
+{"t": 1793475148.219, "kind": "pos", "lat": 47.4033969, "lon": 8.5539164, "alt": 47.908, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475148.719, "kind": "pos", "lat": 47.4034112, "lon": 8.5539403, "alt": 47.261, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475148.886, "kind": "opc", "n": 632.0, "e": 629.7, "alt": 47.0, "mg": 0.01}
+{"t": 1793475149.224, "kind": "pos", "lat": 47.4034326, "lon": 8.5539765, "alt": 46.377, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475149.726, "kind": "pos", "lat": 47.4034463, "lon": 8.5540005, "alt": 45.769, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475149.889, "kind": "opc", "n": 635.8, "e": 634.2, "alt": 45.5, "mg": 0.016}
+{"t": 1793475150.227, "kind": "pos", "lat": 47.403467, "lon": 8.554036, "alt": 44.858, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475150.728, "kind": "pos", "lat": 47.4034812, "lon": 8.5540593, "alt": 44.231, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475150.89, "kind": "opc", "n": 639.8, "e": 638.7, "alt": 43.9, "mg": 0.013}
+{"t": 1793475151.229, "kind": "pos", "lat": 47.4035024, "lon": 8.554095, "alt": 43.364, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475151.73, "kind": "pos", "lat": 47.4035154, "lon": 8.5541174, "alt": 42.816, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475151.894, "kind": "opc", "n": 643.5, "e": 643.0, "alt": 42.5, "mg": 0.002}
+{"t": 1793475152.234, "kind": "pos", "lat": 47.4035274, "lon": 8.5541392, "alt": 42.301, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475152.736, "kind": "pos", "lat": 47.4035432, "lon": 8.5541666, "alt": 41.693, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475152.896, "kind": "opc", "n": 646.4, "e": 646.5, "alt": 41.5, "mg": 0.008}
+{"t": 1793475153.237, "kind": "pos", "lat": 47.4035523, "lon": 8.5541825, "alt": 41.32, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475153.745, "kind": "pos", "lat": 47.4035632, "lon": 8.5542008, "alt": 40.943, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475153.899, "kind": "opc", "n": 648.5, "e": 648.8, "alt": 40.8, "mg": 0.014}
+{"t": 1793475154.253, "kind": "pos", "lat": 47.4035693, "lon": 8.5542111, "alt": 40.771, "mode": "mission", "state": "ENROUTE", "batt": 89.0, "seq": 4, "armed": true}
+{"t": 1793475154.468, "kind": "event", "code": "ARRIVING", "text": "final item: land", "state": "ARRIVING"}
+{"t": 1793475154.756, "kind": "pos", "lat": 47.4035766, "lon": 8.5542225, "alt": 40.355, "mode": "mission", "state": "ARRIVING", "batt": 89.0, "seq": 5, "armed": true}
+{"t": 1793475154.906, "kind": "opc", "n": 649.8, "e": 650.3, "alt": 40.1, "mg": 0.016}
+{"t": 1793475155.259, "kind": "pos", "lat": 47.4035802, "lon": 8.5542276, "alt": 39.874, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475155.762, "kind": "pos", "lat": 47.4035848, "lon": 8.5542328, "alt": 39.057, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475155.908, "kind": "opc", "n": 650.7, "e": 651.0, "alt": 38.8, "mg": 0.002}
+{"t": 1793475156.262, "kind": "pos", "lat": 47.4035867, "lon": 8.5542355, "alt": 38.51, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475156.762, "kind": "pos", "lat": 47.4035884, "lon": 8.5542382, "alt": 37.628, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475156.912, "kind": "opc", "n": 650.9, "e": 651.3, "alt": 37.6, "mg": 0.002}
+{"t": 1793475157.263, "kind": "pos", "lat": 47.4035895, "lon": 8.5542385, "alt": 37.042, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475157.766, "kind": "pos", "lat": 47.4035907, "lon": 8.554237, "alt": 36.073, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475157.917, "kind": "opc", "n": 651.2, "e": 651.2, "alt": 36.1, "mg": 0.015}
+{"t": 1793475158.27, "kind": "pos", "lat": 47.4035906, "lon": 8.5542352, "alt": 35.432, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475158.774, "kind": "pos", "lat": 47.4035899, "lon": 8.5542333, "alt": 34.537, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475158.92, "kind": "opc", "n": 651.1, "e": 650.9, "alt": 34.5, "mg": 0.007}
+{"t": 1793475159.277, "kind": "pos", "lat": 47.4035897, "lon": 8.5542317, "alt": 33.939, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475159.784, "kind": "pos", "lat": 47.4035894, "lon": 8.5542291, "alt": 33.057, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475159.927, "kind": "opc", "n": 651.0, "e": 650.6, "alt": 33.1, "mg": 0.019}
+{"t": 1793475160.292, "kind": "pos", "lat": 47.4035895, "lon": 8.5542274, "alt": 32.459, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475160.8, "kind": "pos", "lat": 47.40359, "lon": 8.5542245, "alt": 31.603, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475160.929, "kind": "opc", "n": 651.1, "e": 650.2, "alt": 31.6, "mg": 0.012}
+{"t": 1793475161.306, "kind": "pos", "lat": 47.4035898, "lon": 8.5542227, "alt": 30.986, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475161.814, "kind": "pos", "lat": 47.4035891, "lon": 8.5542214, "alt": 30.079, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475161.932, "kind": "opc", "n": 651.0, "e": 650.0, "alt": 30.1, "mg": 0.014}
+{"t": 1793475162.321, "kind": "pos", "lat": 47.4035884, "lon": 8.5542211, "alt": 29.489, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475162.829, "kind": "pos", "lat": 47.4035878, "lon": 8.5542209, "alt": 28.605, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475162.932, "kind": "opc", "n": 650.9, "e": 650.0, "alt": 28.6, "mg": 0.017}
+{"t": 1793475163.333, "kind": "pos", "lat": 47.4035876, "lon": 8.55422, "alt": 28.078, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475163.835, "kind": "pos", "lat": 47.4035873, "lon": 8.554219, "alt": 27.115, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475163.932, "kind": "opc", "n": 650.8, "e": 649.8, "alt": 27.1, "mg": 0.004}
+{"t": 1793475164.339, "kind": "pos", "lat": 47.403587, "lon": 8.5542191, "alt": 26.491, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475164.84, "kind": "pos", "lat": 47.4035862, "lon": 8.5542197, "alt": 25.885, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475164.933, "kind": "opc", "n": 650.6, "e": 649.9, "alt": 25.6, "mg": 0.007}
+{"t": 1793475165.343, "kind": "pos", "lat": 47.4035847, "lon": 8.5542196, "alt": 24.941, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475165.847, "kind": "pos", "lat": 47.4035837, "lon": 8.5542196, "alt": 24.314, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475165.936, "kind": "opc", "n": 650.4, "e": 649.9, "alt": 24.0, "mg": 0.013}
+{"t": 1793475166.353, "kind": "pos", "lat": 47.403583, "lon": 8.5542206, "alt": 23.335, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475166.853, "kind": "pos", "lat": 47.4035829, "lon": 8.5542208, "alt": 22.692, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475166.942, "kind": "opc", "n": 650.3, "e": 650.0, "alt": 22.4, "mg": 0.004}
+{"t": 1793475167.355, "kind": "pos", "lat": 47.4035822, "lon": 8.5542224, "alt": 21.856, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475167.86, "kind": "pos", "lat": 47.4035817, "lon": 8.5542237, "alt": 21.272, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475167.945, "kind": "opc", "n": 650.2, "e": 650.2, "alt": 21.0, "mg": 0.015}
+{"t": 1793475168.36, "kind": "pos", "lat": 47.4035811, "lon": 8.5542246, "alt": 20.393, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475168.864, "kind": "pos", "lat": 47.403581, "lon": 8.554225, "alt": 19.781, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475168.949, "kind": "opc", "n": 650.1, "e": 650.3, "alt": 19.5, "mg": 0.01}
+{"t": 1793475169.367, "kind": "pos", "lat": 47.4035815, "lon": 8.5542245, "alt": 18.859, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475169.871, "kind": "pos", "lat": 47.4035816, "lon": 8.554224, "alt": 18.216, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475169.953, "kind": "opc", "n": 650.2, "e": 650.2, "alt": 17.9, "mg": 0.014}
+{"t": 1793475170.372, "kind": "pos", "lat": 47.4035819, "lon": 8.5542227, "alt": 17.333, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475170.875, "kind": "pos", "lat": 47.4035817, "lon": 8.5542219, "alt": 16.78, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475170.956, "kind": "opc", "n": 650.2, "e": 650.0, "alt": 16.5, "mg": 0.007}
+{"t": 1793475171.375, "kind": "pos", "lat": 47.4035814, "lon": 8.5542222, "alt": 15.999, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475171.875, "kind": "pos", "lat": 47.4035816, "lon": 8.5542217, "alt": 15.418, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475171.956, "kind": "opc", "n": 650.2, "e": 650.0, "alt": 15.4, "mg": 0.013}
+{"t": 1793475172.382, "kind": "pos", "lat": 47.4035817, "lon": 8.5542208, "alt": 14.466, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475172.883, "kind": "pos", "lat": 47.4035814, "lon": 8.5542209, "alt": 13.846, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475172.96, "kind": "opc", "n": 650.2, "e": 650.0, "alt": 13.8, "mg": 0.022}
+{"t": 1793475173.387, "kind": "pos", "lat": 47.4035814, "lon": 8.5542208, "alt": 13.237, "mode": "mission", "state": "ARRIVING", "batt": 88.0, "seq": 5, "armed": true}
+{"t": 1793475173.889, "kind": "pos", "lat": 47.4035813, "lon": 8.5542205, "alt": 12.363, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475173.963, "kind": "opc", "n": 650.1, "e": 649.9, "alt": 12.4, "mg": 0.002}
+{"t": 1793475174.397, "kind": "pos", "lat": 47.4035811, "lon": 8.5542201, "alt": 11.785, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475174.897, "kind": "pos", "lat": 47.4035802, "lon": 8.5542203, "alt": 10.895, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475174.966, "kind": "opc", "n": 650.0, "e": 649.9, "alt": 10.9, "mg": 0.019}
+{"t": 1793475175.397, "kind": "pos", "lat": 47.4035803, "lon": 8.5542203, "alt": 10.296, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475175.9, "kind": "pos", "lat": 47.4035806, "lon": 8.5542197, "alt": 9.483, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475175.968, "kind": "opc", "n": 650.1, "e": 649.9, "alt": 9.5, "mg": 0.013}
+{"t": 1793475176.407, "kind": "pos", "lat": 47.4035806, "lon": 8.5542197, "alt": 8.962, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475176.908, "kind": "pos", "lat": 47.4035803, "lon": 8.5542199, "alt": 8.081, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475176.969, "kind": "opc", "n": 650.0, "e": 649.9, "alt": 8.1, "mg": 0.008}
+{"t": 1793475177.41, "kind": "pos", "lat": 47.4035803, "lon": 8.5542202, "alt": 7.557, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475177.913, "kind": "pos", "lat": 47.4035804, "lon": 8.5542195, "alt": 6.856, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475177.97, "kind": "opc", "n": 650.0, "e": 649.9, "alt": 6.9, "mg": 0.002}
+{"t": 1793475178.417, "kind": "pos", "lat": 47.4035805, "lon": 8.5542184, "alt": 6.392, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475178.917, "kind": "pos", "lat": 47.4035806, "lon": 8.5542173, "alt": 5.763, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475178.974, "kind": "opc", "n": 650.1, "e": 649.7, "alt": 5.8, "mg": 0.01}
+{"t": 1793475179.419, "kind": "pos", "lat": 47.4035807, "lon": 8.5542167, "alt": 5.304, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475179.922, "kind": "pos", "lat": 47.4035809, "lon": 8.5542163, "alt": 4.789, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475179.974, "kind": "opc", "n": 650.1, "e": 649.6, "alt": 4.8, "mg": 0.008}
+{"t": 1793475180.429, "kind": "pos", "lat": 47.4035813, "lon": 8.5542158, "alt": 4.521, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475180.932, "kind": "pos", "lat": 47.4035818, "lon": 8.5542157, "alt": 4.258, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475180.977, "kind": "opc", "n": 650.2, "e": 649.6, "alt": 4.1, "mg": 0.016}
+{"t": 1793475181.434, "kind": "pos", "lat": 47.4035816, "lon": 8.5542161, "alt": 3.878, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475181.937, "kind": "pos", "lat": 47.4035821, "lon": 8.5542161, "alt": 3.698, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475181.979, "kind": "opc", "n": 650.2, "e": 649.6, "alt": 3.6, "mg": 0.001}
+{"t": 1793475182.442, "kind": "pos", "lat": 47.403582, "lon": 8.5542173, "alt": 3.346, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475182.943, "kind": "pos", "lat": 47.403582, "lon": 8.5542179, "alt": 3.055, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475182.98, "kind": "opc", "n": 650.2, "e": 649.8, "alt": 2.9, "mg": 0.006}
+{"t": 1793475183.447, "kind": "pos", "lat": 47.4035816, "lon": 8.5542189, "alt": 2.623, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475183.95, "kind": "pos", "lat": 47.4035809, "lon": 8.5542199, "alt": 2.345, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475183.987, "kind": "opc", "n": 650.1, "e": 649.9, "alt": 2.2, "mg": 0.006}
+{"t": 1793475184.454, "kind": "pos", "lat": 47.4035801, "lon": 8.5542203, "alt": 1.841, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475184.955, "kind": "pos", "lat": 47.4035796, "lon": 8.5542209, "alt": 1.518, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475184.991, "kind": "opc", "n": 649.9, "e": 650.0, "alt": 1.5, "mg": 0.017}
+{"t": 1793475185.458, "kind": "pos", "lat": 47.4035791, "lon": 8.5542226, "alt": 1.056, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475185.961, "kind": "pos", "lat": 47.403579, "lon": 8.5542236, "alt": 0.827, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475185.997, "kind": "opc", "n": 649.9, "e": 650.2, "alt": 0.8, "mg": 0.0}
+{"t": 1793475186.463, "kind": "pos", "lat": 47.4035788, "lon": 8.5542253, "alt": 0.547, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475186.964, "kind": "pos", "lat": 47.4035792, "lon": 8.5542251, "alt": 0.336, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475187.0, "kind": "opc", "n": 649.9, "e": 650.3, "alt": 0.3, "mg": 0.001}
+{"t": 1793475187.467, "kind": "pos", "lat": 47.4035797, "lon": 8.5542237, "alt": 0.034, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475187.971, "kind": "pos", "lat": 47.40358, "lon": 8.5542235, "alt": -0.11, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475188.004, "kind": "opc", "n": 650.0, "e": 650.2, "alt": -0.1, "mg": 0.01}
+{"t": 1793475188.471, "kind": "pos", "lat": 47.4035796, "lon": 8.5542232, "alt": -0.341, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475188.975, "kind": "pos", "lat": 47.4035787, "lon": 8.554223, "alt": -0.481, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475189.007, "kind": "opc", "n": 649.8, "e": 650.1, "alt": -0.5, "mg": 0.006}
+{"t": 1793475189.479, "kind": "pos", "lat": 47.4035779, "lon": 8.5542234, "alt": -0.62, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475189.982, "kind": "pos", "lat": 47.4035778, "lon": 8.5542238, "alt": -0.656, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475190.01, "kind": "opc", "n": 649.7, "e": 650.2, "alt": -0.7, "mg": 0.012}
+{"t": 1793475190.483, "kind": "pos", "lat": 47.403578, "lon": 8.5542238, "alt": -0.712, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475190.984, "kind": "pos", "lat": 47.403578, "lon": 8.5542238, "alt": -0.766, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475191.012, "kind": "opc", "n": 649.8, "e": 650.2, "alt": -0.8, "mg": 0.013}
+{"t": 1793475191.484, "kind": "pos", "lat": 47.4035782, "lon": 8.5542236, "alt": -0.783, "mode": "mission", "state": "ARRIVING", "batt": 87.0, "seq": 5, "armed": true}
+{"t": 1793475191.988, "kind": "pos", "lat": 47.4035784, "lon": 8.5542236, "alt": -0.769, "mode": "mission", "state": "ARRIVING", "batt": 86.0, "seq": 5, "armed": true}
+{"t": 1793475192.012, "kind": "opc", "n": 649.8, "e": 650.2, "alt": -0.8, "mg": 0.015}
+{"t": 1793475192.493, "kind": "pos", "lat": 47.4035781, "lon": 8.5542236, "alt": -0.764, "mode": "mission", "state": "ARRIVING", "batt": 86.0, "seq": 5, "armed": true}
+{"t": 1793475192.994, "kind": "pos", "lat": 47.4035775, "lon": 8.5542238, "alt": -0.759, "mode": "hold", "state": "ARRIVING", "batt": 86.0, "seq": 5, "armed": true}
+{"t": 1793475193.014, "kind": "opc", "n": 649.7, "e": 650.2, "alt": -0.8, "mg": 0.018}
+{"t": 1793475193.495, "kind": "pos", "lat": 47.4035773, "lon": 8.5542238, "alt": -0.739, "mode": "hold", "state": "ARRIVING", "batt": 86.0, "seq": 5, "armed": true}
+{"t": 1793475193.998, "kind": "pos", "lat": 47.4035774, "lon": 8.5542238, "alt": -0.732, "mode": "hold", "state": "ARRIVING", "batt": 86.0, "seq": 5, "armed": true}
+{"t": 1793475194.018, "kind": "opc", "n": 649.7, "e": 650.2, "alt": -0.7, "mg": 0.002}
+{"t": 1793475194.505, "kind": "pos", "lat": 47.4035773, "lon": 8.5542233, "alt": -0.754, "mode": "hold", "state": "ARRIVING", "batt": 86.0, "seq": 5, "armed": true}
+{"t": 1793475194.815, "kind": "event", "code": "DONE", "text": "landed and disarmed; 2 replans, 1 ash encounters, 1067 m flown", "state": "DONE"}
