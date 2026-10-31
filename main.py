@@ -1,3 +1,4 @@
+
 import pygame
 import heapq
 import math
@@ -837,6 +838,7 @@ grid_mission_start_ticks = 0
 grid_mission_end_ticks = 0
 grid_old_path = []
 grid_old_path_timer = 0.0
+grid_scan_due = True  # sensor runs the moment a new cell is entered
 grid_setup_mode = "idle"
 grid_pending_placement = None
 grid_pending_corner1 = None
@@ -867,6 +869,7 @@ map_mission_start_ticks = 0
 map_mission_end_ticks = 0
 map_old_path = []
 map_old_path_timer = 0.0
+map_scan_due = True
 map_setup_mode = "idle"
 map_pending_placement = None
 map_pending_corner1_latlon = None
@@ -895,15 +898,14 @@ def build_targets_map():
 
 
 def grid_route_for_leg(start, target):
-    # Build the actual leg with the same 3-D obstacle/hazard constraints used
-    # by live replanning. The drone therefore starts each waypoint leg on a
-    # safe trajectory instead of following a hazard-blind straight line.
-    return grid_astar(start, target)
+    # Nominal leg is intentionally hazard-blind. The live sensor detects threats
+    # ahead and A* is invoked only then, so the reroute is visible in flight.
+    return direct_path(start, target)
 
 
 def map_route_for_leg(start, target):
-    # Map mode uses the same 3-D constrained planner as the live replan path.
-    return map_astar(start, target)
+    # Hazard-blind nominal leg; map_astar runs only after live detection.
+    return direct_path(start, target)
 
 
 def refresh_grid_pixel_path():
@@ -1100,13 +1102,187 @@ def map_threat_signature(threat):
     return ("hazard", o["id"], o.get("severity"))
 
 
+# ============================================================
+# LIVE DETECTION / REROUTE VISUAL FEEDBACK
+# ============================================================
+
+ALERT = {"grid": None, "map": None}
+ALERT_COLORS = {"DETECTED": (255, 70, 55), "CORRECTED": (110, 240, 130), "FAILED": (240, 170, 50)}
+ABANDONED_ROUTE_COLOR = (235, 80, 60)
+REPLAN_PAUSE = 1.0  # seconds the drone holds while the replan "loads"
+
+
+def mark_alert_computing(key):
+    a = ALERT.get(key)
+    if a:
+        a["computing"] = True
+        a["until"] = time.perf_counter() + 8.0
+
+
+def make_alert(threat, path, seg):
+    idx = min(threat["index"], len(path) - 1)
+    o = threat["obj"]
+    label = f"OBSTACLE #{o['id']}" if threat["kind"] == "obstacle" else hazard_label(o)
+    now = time.perf_counter()
+    return {"obj": o, "label": label, "cell": path[idx], "dist": max(0, idx - seg),
+            "t0": now, "until": now + 8.0, "phase": "DETECTED"}
+
+
+def set_alert_phase(key, phase, hold=3.0):
+    a = ALERT.get(key)
+    if a:
+        a["phase"] = phase
+        a["until"] = time.perf_counter() + hold
+
+
+def _alert_rect(key, o):
+    if key == "grid":
+        return pygame.Rect(o["col_start"] * CELL_SIZE, o["row_start"] * CELL_SIZE,
+                           o["width"] * CELL_SIZE, o["height"] * CELL_SIZE)
+    p1 = map_latlon_to_screen(o["lat1"], o["lon1"])
+    p2 = map_latlon_to_screen(o["lat2"], o["lon2"])
+    x1, x2 = sorted((p1[0], p2[0]))
+    y1, y2 = sorted((p1[1], p2[1]))
+    return pygame.Rect(x1, y1, max(3, x2 - x1), max(3, y2 - y1))
+
+
+def _alert_state(key):
+    if key == "grid":
+        return grid_path, grid_current_segment, grid_progress, grid_pixel_path
+    return map_path, map_current_segment, map_progress, map_pixel_path
+
+
+def _alert_drone_px(key):
+    path, seg, prog, px = _alert_state(key)
+    if not path or not px:
+        return None
+    if seg >= len(path) - 1:
+        return px[-1]
+    t = ease_in_out(prog)
+    return (int(lerp(px[seg][0], px[seg + 1][0], t)), int(lerp(px[seg][1], px[seg + 1][1], t)))
+
+
+def draw_abandoned_route(points, label_ok=True):
+    """Old (now blocked) route: bold red dashes + label, shown after a reroute."""
+    if len(points) < 2:
+        return
+    draw_dashed_line(screen, points, ABANDONED_ROUTE_COLOR, 3, dash=10, gap=7)
+    if label_ok:
+        mid = points[len(points) // 2]
+        txt = font_micro.render("ABANDONED ROUTE", True, ABANDONED_ROUTE_COLOR)
+        screen.blit(txt, (mid[0] + 6, mid[1] - 14))
+
+
+def draw_replan_alert(key):
+    a = ALERT.get(key)
+    if not a:
+        return
+    now = time.perf_counter()
+    if now > a["until"]:
+        return
+    pos = _alert_drone_px(key)
+    if pos is None:
+        return
+    path, seg, _prog, route_px = _alert_state(key)
+    phase = a["phase"]
+    col = ALERT_COLORS[phase]
+    age = now - a["t0"]
+    pulse = 0.5 + 0.5 * math.sin(now * 12.0)
+    fade = max(0.0, min(1.0, (a["until"] - now) / 0.6))
+    sensor_r = SENSOR_RANGE_CELLS * (CELL_SIZE if key == "grid" else MAP_WIDTH / MAP_COLS)
+
+    area = pygame.Rect(0, 0, GRID_WIDTH, GRID_HEIGHT)
+    layer = pygame.Surface(area.size, pygame.SRCALPHA)
+
+    # 1. Threat volume: flashing red while detected, dim amber once avoided.
+    rect = _alert_rect(key, a["obj"])
+    rcol = (240, 180, 60) if phase == "CORRECTED" else col
+    r_alpha = 40 if phase == "CORRECTED" else int(50 + 70 * pulse)
+    pygame.draw.rect(layer, (*rcol, int(r_alpha * fade)), rect)
+    pygame.draw.rect(layer, (*rcol, int(255 * fade)), rect, 2 if phase == "CORRECTED" else 3)
+    draw_hud_corners(layer, rect.inflate(10, 10), (*rcol, int(255 * fade)), length=12, thickness=3)
+
+    # 2. Impact point where the old route would have entered the threat.
+    impact = grid_to_pixel(a["cell"]) if key == "grid" else map_latlon_to_screen(*map_cell_to_latlon(a["cell"]))
+    if phase != "CORRECTED":
+        draw_dashed_line(layer, [pos, impact], (*col, int(230 * fade)), 2, dash=8, gap=6)
+    s_ = 8 if phase != "CORRECTED" else 6
+    ic = (*rcol, int(255 * fade))
+    pygame.draw.line(layer, ic, (impact[0] - s_, impact[1] - s_), (impact[0] + s_, impact[1] + s_), 3)
+    pygame.draw.line(layer, ic, (impact[0] - s_, impact[1] + s_), (impact[0] + s_, impact[1] - s_), 3)
+    if phase != "CORRECTED":
+        pygame.draw.circle(layer, ic, impact, int(12 + 5 * pulse), 2)
+
+    # 3. Sensor pings radiating from the drone.
+    if phase == "DETECTED":
+        for k in range(3):
+            f = ((age * 1.4) + k / 3.0) % 1.0
+            pygame.draw.circle(layer, (*col, int(210 * (1 - f))), pos, max(2, int(sensor_r * f)), 2)
+        pygame.draw.rect(layer, (*col, int(50 + 110 * pulse)), area, 6)  # screen-edge alert flash
+    elif phase == "CORRECTED":
+        f = (now * 0.9) % 1.0
+        pygame.draw.circle(layer, (*col, int(130 * (1 - f) * fade)), pos, max(2, int(sensor_r * f)), 2)
+        # 4. New trajectory: glowing green overlay on the route being flown.
+        pts = route_px[seg:] if route_px else []
+        if len(pts) > 1:
+            pygame.draw.lines(layer, (*col, int((70 + 50 * pulse) * fade)), False, pts, 12)
+            pygame.draw.lines(layer, (*col, int(255 * fade)), False, pts, 3)
+
+    screen.blit(layer, (0, 0))
+
+    # 5. Drone marker recoloured to the alert state.
+    pygame.draw.circle(screen, col, pos, 8)
+    pygame.draw.circle(screen, (255, 255, 255), pos, 9, 1)
+    pygame.draw.circle(screen, col, pos, int(14 + (3 * pulse if phase == "DETECTED" else 0)), 2)
+
+    # 6. Text tags: one on the threat, one on the drone.
+    tag_txt = {"DETECTED": "THREAT: ", "CORRECTED": "AVOIDED: ", "FAILED": "NO ROUTE: "}[phase] + a["label"]
+    tag = font_tiny.render(tag_txt, True, rcol)
+    tx = min(max(4, rect.x), GRID_WIDTH - tag.get_width() - 4)
+    ty = rect.y - 18 if rect.y >= 22 else rect.bottom + 4  # keep clear of the zone's own label
+    screen.blit(tag, (tx, ty))
+
+    dots = "." * (int(now * 3) % 4)
+    show_bar = phase == "DETECTED"
+    frac = 1.0 if a.get("computing") else max(0.0, min(1.0, age / REPLAN_PAUSE))
+    if phase == "DETECTED" and a.get("computing"):
+        msg = f"COMPUTING NEW ROUTE{dots}"
+    elif phase == "DETECTED":
+        msg = ("THREAT IN PATH" if a["dist"] == 0 else f"THREAT {a['dist']} CELLS AHEAD") + f" - REPLANNING {int(frac * 100)}%"
+    elif phase == "CORRECTED":
+        msg = "NEW ROUTE LOCKED"
+    else:
+        msg = "NO SAFE ROUTE FOUND"
+    m = font_small.render(msg, True, col)
+    box = pygame.Rect(pos[0] + 16, pos[1] + 16, m.get_width() + 12,
+                      m.get_height() + 8 + (14 if show_bar else 0))
+    box.x = min(max(4, box.x), GRID_WIDTH - box.w - 4)
+    box.y = min(max(4, box.y), GRID_HEIGHT - box.h - 4)
+    bg = pygame.Surface(box.size, pygame.SRCALPHA)
+    bg.fill((8, 10, 8, 215))
+    screen.blit(bg, box.topleft)
+    pygame.draw.rect(screen, col, box, 2)
+    screen.blit(m, (box.x + 6, box.y + 4))
+    if show_bar:
+        bar = pygame.Rect(box.x + 6, box.bottom - 14, box.w - 12, 8)
+        pygame.draw.rect(screen, (30, 22, 20), bar)
+        pygame.draw.rect(screen, col, (bar.x, bar.y, int(bar.w * frac), bar.h))
+        if a.get("computing"):  # indeterminate sweep so it never looks frozen
+            sw = max(14, bar.w // 4)
+            sx = bar.x + int(((now * 1.6) % 1.0) * (bar.w - sw))
+            pygame.draw.rect(screen, (255, 255, 255), (sx, bar.y, sw, bar.h))
+        pygame.draw.rect(screen, col, bar, 1)
+
+
 def grid_start_replan_sequence(threat):
     global grid_response_state, grid_response_timer, grid_pending_threat, grid_threat_lock
-    global grid_hazard_ahead, grid_hazard_cells
+    global grid_hazard_ahead, grid_hazard_cells, grid_progress
+    grid_progress = 0.0
     grid_pending_threat = threat
     grid_threat_lock = grid_threat_signature(threat)
     grid_response_state = "DETECTED"
-    grid_response_timer = 0.55
+    grid_response_timer = REPLAN_PAUSE
+    ALERT["grid"] = make_alert(threat, grid_path, grid_current_segment)
     grid_hazard_ahead = True
     label = "OBSTACLE" if threat["kind"] == "obstacle" else hazard_label(threat["obj"])
     announce(f"HAZARD DETECTED — {label} — CHANGING COURSE", "warning", 1.7)
@@ -1114,11 +1290,13 @@ def grid_start_replan_sequence(threat):
 
 def map_start_replan_sequence(threat):
     global map_response_state, map_response_timer, map_pending_threat, map_threat_lock
-    global map_hazard_ahead, map_hazard_cells
+    global map_hazard_ahead, map_hazard_cells, map_progress
+    map_progress = 0.0
     map_pending_threat = threat
     map_threat_lock = map_threat_signature(threat)
     map_response_state = "DETECTED"
-    map_response_timer = 0.55
+    map_response_timer = REPLAN_PAUSE
+    ALERT["map"] = make_alert(threat, map_path, map_current_segment)
     map_hazard_ahead = True
     label = "OBSTACLE" if threat["kind"] == "obstacle" else hazard_label(threat["obj"])
     announce(f"HAZARD DETECTED — {label} — CHANGING COURSE", "warning", 1.7)
@@ -1144,17 +1322,19 @@ def grid_execute_replan():
     grid_last_replan_ms = elapsed
     if new_remaining is not None:
         grid_old_path = old_path
-        grid_old_path_timer = 1.25
+        grid_old_path_timer = 3.5
         grid_path = grid_path[:grid_current_segment] + new_remaining
         refresh_grid_pixel_path()
         grid_replan_count += 1
         grid_progress = 0.0
         grid_response_state = "CORRECTED"
-        grid_response_timer = 1.0
+        grid_response_timer = 1.5
+        set_alert_phase("grid", "CORRECTED")
         announce("COURSE CORRECTION — NEW TRAJECTORY LOCKED", "info", 1.5)
     else:
         grid_response_state = "IDLE"
         grid_response_timer = 0.0
+        set_alert_phase("grid", "FAILED")
         announce("REPLAN FAILED — HOLDING CURRENT TRAJECTORY", "warning", 2.0)
     grid_pending_threat = None
     grid_hazard_ahead = True
@@ -1180,17 +1360,19 @@ def map_execute_replan():
     map_last_replan_ms = elapsed
     if new_remaining is not None:
         map_old_path = old_path
-        map_old_path_timer = 1.25
+        map_old_path_timer = 3.5
         map_path = map_path[:map_current_segment] + new_remaining
         refresh_map_pixel_path()
         map_replan_count += 1
         map_progress = 0.0
         map_response_state = "CORRECTED"
-        map_response_timer = 1.0
+        map_response_timer = 1.5
+        set_alert_phase("map", "CORRECTED")
         announce("COURSE CORRECTION — NEW TRAJECTORY LOCKED", "info", 1.5)
     else:
         map_response_state = "IDLE"
         map_response_timer = 0.0
+        set_alert_phase("map", "FAILED")
         announce("REPLAN FAILED — HOLDING CURRENT TRAJECTORY", "warning", 2.0)
     map_pending_threat = None
     map_hazard_ahead = True
@@ -1199,17 +1381,21 @@ def map_execute_replan():
 def grid_update_mission(dt):
     global grid_progress, grid_current_segment, grid_hazard_ahead, grid_hazard_cells, grid_hazard_cells_crossed
     global grid_hazard_was_detected, grid_response_state, grid_response_timer
-    global grid_old_path_timer, grid_last_counted_segment, grid_threat_lock
+    global grid_old_path_timer, grid_last_counted_segment, grid_threat_lock, grid_scan_due
     if grid_mission_complete or not grid_path:
         return
 
     if grid_old_path_timer > 0:
         grid_old_path_timer = max(0.0, grid_old_path_timer - dt)
 
+    if grid_response_state == "COMPUTING":
+        grid_execute_replan()  # A* runs here, one frame after "COMPUTING" was drawn
+        return
     if grid_response_state == "DETECTED":
         grid_response_timer -= dt
         if grid_response_timer <= 0:
-            grid_execute_replan()
+            grid_response_state = "COMPUTING"
+            mark_alert_computing("grid")
         return
     if grid_response_state == "CORRECTED":
         grid_response_timer -= dt
@@ -1217,8 +1403,9 @@ def grid_update_mission(dt):
             grid_response_state = "IDLE"
 
     # Detect on cell boundaries so a newly detected threat never causes a visible back-jump.
-    at_boundary = grid_progress <= 0.001
+    at_boundary = grid_progress <= 0.001 or grid_scan_due
     if at_boundary:
+        grid_scan_due = False
         threats = grid_scan_threats()
         grid_hazard_cells = [grid_path[i] for i in range(grid_current_segment,
                                                            min(len(grid_path), grid_current_segment + 1 + SENSOR_RANGE_CELLS))
@@ -1242,6 +1429,7 @@ def grid_update_mission(dt):
         grid_progress -= 1.0
         if grid_current_segment < len(grid_path) - 1:
             grid_current_segment += 1
+            grid_scan_due = True
             if grid_current_segment != grid_last_counted_segment:
                 if hazards_at_grid(grid_path[grid_current_segment]):
                     grid_hazard_cells_crossed += 1
@@ -1256,24 +1444,29 @@ def grid_update_mission(dt):
 def map_update_mission(dt):
     global map_progress, map_current_segment, map_hazard_ahead, map_hazard_cells, map_hazard_cells_crossed
     global map_hazard_was_detected, map_response_state, map_response_timer
-    global map_old_path_timer, map_last_counted_segment, map_threat_lock
+    global map_old_path_timer, map_last_counted_segment, map_threat_lock, map_scan_due
     if map_mission_complete or not map_path:
         return
 
     if map_old_path_timer > 0:
         map_old_path_timer = max(0.0, map_old_path_timer - dt)
 
+    if map_response_state == "COMPUTING":
+        map_execute_replan()
+        return
     if map_response_state == "DETECTED":
         map_response_timer -= dt
         if map_response_timer <= 0:
-            map_execute_replan()
+            map_response_state = "COMPUTING"
+            mark_alert_computing("map")
         return
     if map_response_state == "CORRECTED":
         map_response_timer -= dt
         if map_response_timer <= 0:
             map_response_state = "IDLE"
 
-    if map_progress <= 0.001:
+    if map_progress <= 0.001 or map_scan_due:
+        map_scan_due = False
         threats = map_scan_threats()
         end = min(len(map_path), map_current_segment + 1 + SENSOR_RANGE_CELLS)
         map_hazard_cells = [map_path[i] for i in range(map_current_segment, end) if hazards_at_map(map_path[i])]
@@ -1296,6 +1489,7 @@ def map_update_mission(dt):
         map_progress -= 1.0
         if map_current_segment < len(map_path) - 1:
             map_current_segment += 1
+            map_scan_due = True
             if map_current_segment != map_last_counted_segment:
                 if hazards_at_map(map_path[map_current_segment]):
                     map_hazard_cells_crossed += 1
@@ -1684,6 +1878,7 @@ def start_grid_simulation():
     grid_old_path = []
     grid_old_path_timer = 0.0
     grid_show_report = False
+    ALERT["grid"] = None
     grid_mission_start_ticks = pygame.time.get_ticks()
     grid_mission_end_ticks = grid_mission_start_ticks
     grid_setup_message = "LIVE SENSOR ENABLED — obstacle, turbulence and ash avoidance active."
@@ -1747,6 +1942,7 @@ def start_map_simulation():
     map_old_path = []
     map_old_path_timer = 0.0
     map_show_report = False
+    ALERT["map"] = None
     map_mission_start_ticks = pygame.time.get_ticks()
     map_mission_end_ticks = map_mission_start_ticks
     map_status = "LIVE GEO SENSOR ENABLED — adaptive route replanning active."
@@ -1962,10 +2158,10 @@ def draw_altitude_panel(path, hazards_to_draw, obstacles_to_draw=None, is_map=Fa
 
     # Current drone position.
     if points:
-        seg = min(max(0, current_segment), max(0, len(points) - 2))
-        if len(points) == 1 or seg >= len(points) - 1:
-            marker = points[-1]
+        if len(points) == 1 or current_segment >= len(points) - 1:
+            marker = points[-1]  # at the final point: pin exactly to the end of the route
         else:
+            seg = max(0, current_segment)
             t = ease_in_out(progress)
             marker = (lerp(points[seg][0], points[seg + 1][0], t),
                       lerp(points[seg][1], points[seg + 1][1], t))
@@ -2041,7 +2237,7 @@ def draw_grid_path():
     if len(grid_pixel_path) > 1:
         if grid_old_path_timer > 0 and grid_old_path:
             old_px = [grid_to_pixel(c) for c in grid_old_path]
-            draw_dashed_line(screen, old_px, OLD_PATH_COLOR, 2, dash=8, gap=8)
+            draw_abandoned_route(old_px)
         color = HAZARD_PATH_COLOR if grid_hazard_ahead else PATH_COLOR
         pygame.draw.lines(screen, color, False, grid_pixel_path, 4)
 
@@ -2142,7 +2338,7 @@ def draw_real_map():
 
     if map_old_path_timer > 0 and map_old_path:
         old = [map_latlon_to_screen(*map_cell_to_latlon(c)) for c in map_old_path]
-        draw_dashed_line(screen, old, OLD_PATH_COLOR, 2, dash=8, gap=8)
+        draw_abandoned_route(old)
     if len(map_pixel_path) > 1:
         pygame.draw.lines(screen, HAZARD_PATH_COLOR if map_hazard_ahead else MAP_PATH_COLOR,
                           False, map_pixel_path, 4)
@@ -2182,6 +2378,7 @@ def draw_real_map():
         pygame.draw.circle(screen, color, pos, 8)
         pygame.draw.circle(screen, (255, 255, 255), pos, 9, 1)
         screen.blit(font_small.render(f"{alt_ft(current_z):,} ft", True, color), (pos[0] + 12, pos[1] - 20))
+        draw_replan_alert("map")
 
     # Keep only the required OSM attribution on the imagery. The map title is
     # rendered in the right-hand panel instead of over the geographic map.
@@ -3153,6 +3350,7 @@ while running:
     else:
         draw_grid_path()
         draw_grid_drone()
+        draw_replan_alert("grid")
         draw_wind_indicator()
         draw_altitude_panel(grid_path, hazards, is_map=False,
                             current_segment=grid_current_segment, progress=grid_progress)
