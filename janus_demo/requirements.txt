@@ -1,5 +1,0 @@
-# Janus demonstrator (Round 1). Python 3.10 or newer.
-gradio==6.31.0
-# Optional, only for the test suite:
-#   pytest            -> python -m pytest tests
-#   pygame>=2.6.1     -> lets tests/test_planner.py compare against the team's main.py
