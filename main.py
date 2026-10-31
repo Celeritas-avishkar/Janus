@@ -49,6 +49,7 @@ HAZARD_DIRS = [("STATIC", 0, 0), ("N", 0, -1), ("NE", 1, -1), ("E", 1, 0), ("SE"
 HAZARD_SPEED_VALUES = [0.3, 0.6, 1.0, 1.5]   # cells / second
 HAZARD_PREVIEW_S = 3.0                       # ghost outline shows where a zone will be in N seconds
 hazard_clock = 0.0                           # seconds of zone motion since launch
+EMPTY_BOUNDS = (1, 0, 1, 0)                  # xmin > xmax: matches no cell
 
 # ============================================================
 # DISPLAY
@@ -316,7 +317,7 @@ def hazard_label(h):
 # MOVING HAZARD ZONES
 # ============================================================
 # A zone's position is a pure function of the mission clock:
-#     position(T) = fold(home + velocity * T)      (bounces off the map edges)
+#     position(T) = home + velocity * T      (it drifts straight off the map edge and is gone)
 # so the sensor and A* can ask "where will this zone be in t seconds?" and the
 # drone can course-correct BEFORE the zone reaches its route.
 
@@ -373,8 +374,7 @@ def grid_hazard_pos_at(h, T):
     vx, vy = hazard_velocity(h)
     if vx == 0.0 and vy == 0.0:
         return hc, hr
-    return (_fold(hc + vx * T, min(0.0, hc), max(GRID_COLS - h["width"], hc)),
-            _fold(hr + vy * T, min(0.0, hr), max(GRID_ROWS - h["height"], hr)))
+    return hc + vx * T, hr + vy * T
 
 
 def grid_hazard_bounds_at(h, T):
@@ -401,8 +401,7 @@ def map_hazard_pos_at(h, T):
     vx, vy = hazard_velocity(h)
     if vx == 0.0 and vy == 0.0:
         return hx, hy
-    return (_fold(hx + vx * T, min(0.0, hx), max(MAP_COLS - hw, hx)),
-            _fold(hy + vy * T, min(0.0, hy), max(MAP_ROWS - hh, hy)))
+    return hx + vx * T, hy + vy * T
 
 
 def map_hazard_bounds_at(h, T):
@@ -410,10 +409,11 @@ def map_hazard_bounds_at(h, T):
         return map_hazard_bounds_grid(h)
     _hx, _hy, hw, hh = map_hazard_motion_state(h)
     x, y = map_hazard_pos_at(h, T)
-    return (max(0, min(MAP_COLS - 1, int(math.floor(x)))),
-            max(0, min(MAP_COLS - 1, int(math.floor(x + hw)))),
-            max(0, min(MAP_ROWS - 1, int(math.floor(y)))),
-            max(0, min(MAP_ROWS - 1, int(math.floor(y + hh)))))
+    x0, x1 = int(math.floor(x)), int(math.floor(x + hw))
+    y0, y1 = int(math.floor(y)), int(math.floor(y + hh))
+    if x1 < 0 or x0 > MAP_COLS - 1 or y1 < 0 or y0 > MAP_ROWS - 1:
+        return EMPTY_BOUNDS            # zone has left the map
+    return (max(0, x0), min(MAP_COLS - 1, x1), max(0, y0), min(MAP_ROWS - 1, y1))
 
 
 def hazard_bounds_at(h, T):
@@ -492,8 +492,13 @@ def make_hazard_probe(hazard_list, pad=0.0):
                 if b is None:
                     t_lo = max(T0, T0 + tq * 0.1 - window)
                     t_hi = T0 + (tq + 1) * 0.1 + window
-                    b0, b1 = hazard_bounds_at(h, t_lo), hazard_bounds_at(h, t_hi)
-                    b = (min(b0[0], b1[0]), max(b0[1], b1[1]), min(b0[2], b1[2]), max(b0[3], b1[3]))
+                    bs = [bb for bb in (hazard_bounds_at(h, t_lo), hazard_bounds_at(h, t_hi))
+                          if bb[0] <= bb[1] and bb[2] <= bb[3]]
+                    if bs:
+                        b = (min(bb[0] for bb in bs), max(bb[1] for bb in bs),
+                             min(bb[2] for bb in bs), max(bb[3] for bb in bs))
+                    else:
+                        b = EMPTY_BOUNDS
                     cache[(i, tq)] = b
             if b[0] <= x <= b[1] and b[2] <= y <= b[3]:
                 return h
@@ -2599,6 +2604,7 @@ def map_ghost_rect(h):
 
 
 def draw_grid_hazards():
+    screen.set_clip(pygame.Rect(0, 0, GRID_WIDTH, GRID_HEIGHT))
     for h in hazards:
         color = ash_rgba(h["severity"]) if h["type"] == "ash" else turbulence_rgba(h["severity"])
         surf = pygame.Surface((GRID_WIDTH, GRID_HEIGHT), pygame.SRCALPHA)
@@ -2614,6 +2620,7 @@ def draw_grid_hazards():
         if hazard_is_moving(h):
             draw_hazard_ghost_rect(grid_ghost_rect(h))
             draw_motion_arrow(rect, h)
+    screen.set_clip(None)
 
 
 def draw_grid_obstacles():
@@ -2722,6 +2729,7 @@ def draw_real_map():
         screen.blit(font.render("REAL-WORLD MAP UNAVAILABLE", True, TEXT_MAIN), (24, 24))
         screen.blit(font_small.render("Check internet access and install requests + Pillow.", True, (180, 185, 200)), (24, 56))
 
+    screen.set_clip(pygame.Rect(0, 0, MAP_WIDTH, MAP_HEIGHT))
     for h in map_hazards:
         rect = map_zone_screen_rect(h)
         surf = pygame.Surface(rect.size, pygame.SRCALPHA)
@@ -2736,6 +2744,7 @@ def draw_real_map():
             if ghost is not None:
                 draw_hazard_ghost_rect(ghost)
             draw_motion_arrow(rect, h)
+    screen.set_clip(None)
 
     for o in map_obstacles:
         p1 = map_latlon_to_screen(o["lat1"], o["lon1"])
