@@ -1,0 +1,214 @@
+<div class="jn" id="janus-live">
+  <div class="jn-cmd">
+    <div class="cmd-left">
+    <div class="grp">
+      <button class="jn-btn primary" data-cmd="launch">Launch mission</button>
+      <button class="jn-btn" data-cmd="rtl" title="Return to launch and land">Return to launch</button>
+      <button class="jn-btn" data-cmd="resume">Resume</button>
+    </div>
+    <div class="grp">
+      <button class="jn-btn ash" data-cmd="popup" title="A HIGH-concentration ash plume forms ahead; the advisory feed reports it">Ash ahead · reported</button>
+      <button class="jn-btn ash" data-cmd="popup_hidden" title="A HIGH-concentration ash plume forms ahead; nobody reports it, so the drone only finds it with its OPC/SO₂ sensors when it reaches it">Ash ahead · unreported</button>
+      <button class="jn-btn" data-cmd="unsafe" title="Operator error: upload a straight line through a hazard">Unsafe upload</button>
+    </div>
+    <div class="grp">
+      <button class="jn-btn danger" data-cmd="antenna">Pull antenna</button>
+      <button class="jn-btn danger" data-cmd="cut">Cut link</button>
+    </div>
+    </div>
+    <div class="cmd-right">
+    <div class="jn-clock"><span class="phase">SETUP</span><span class="t">T+0.0</span></div>
+    <button class="jn-btn clockbtn" data-cmd="pause" title="Stop / start the simulation clock">
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path class="ic-pause" d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/><path class="ic-play" d="M7 5l12 7-12 7z" fill="currentColor"/></svg>
+      <span class="lbl">Stop clock</span></button>
+    <button class="jn-reset" data-cmd="reset" title="Stop the mission, put the drone back on the pad, zero the clock and heal the link">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M4 12a8 8 0 1 0 2.6-5.9M4 4v5h5"/></svg>
+      <span>RESET</span>
+    </button>
+    </div>
+  </div>
+
+  <div class="jn-caption">
+    <div class="cap-main">Choose a drone and a story in Mission setup, then press Generate.</div>
+    <div class="cap-sub"></div>
+    <button class="jn-btn tour" data-cmd="tour">▶ Play hands-free tour</button>
+  </div>
+
+  <nav class="jn-tabs" role="tablist">
+    <button role="tab" data-tab="views" class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z M9 4v14 M15 6v14"/></svg>Drone views</button>
+    <button role="tab" data-tab="telemetry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>Telemetry</button>
+    <button role="tab" data-tab="reports"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z M14 3v5h5 M9 13h7 M9 17h7"/></svg>Reports</button>
+  </nav>
+
+  <!-- ============================================================ DRONE VIEWS -->
+  <section class="jn-tab" data-tab="views">
+    <div class="jn-viewbar">
+      <button class="jn-btn focusbtn" data-focus-open="split" title="Both views side by side, full screen, with flight controls">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M3 5h8v14H3zM13 5h8v14h-8z" fill="none" stroke="currentColor" stroke-width="2"/></svg> Focus view</button>
+      <div class="seg" role="group" aria-label="Map background">
+        <button data-map-bg="grid" class="on">Grid</button>
+        <button data-map-bg="osm">OpenStreetMap</button>
+      </div>
+      <div class="seg" role="group" aria-label="Altitude profile interval" title="Altitude profile grid interval">
+        <span class="seg-l">Altitude grid</span>
+        <button data-alt-int="auto" class="on">Auto</button>
+        <button data-alt-int="100">100 ft</button>
+        <button data-alt-int="1000">1,000 ft</button>
+        <button data-alt-int="10000">10,000 ft</button>
+      </div>
+      <div class="seg" role="group" aria-label="Altitude profile size">
+        <span class="seg-l">Profile</span>
+        <button data-alt-size="s">S</button>
+        <button data-alt-size="m" class="on">M</button>
+        <button data-alt-size="l">L</button>
+      </div>
+      <div class="legend">
+        <span class="lg-h">Volcanic ash</span>
+        <span><i class="sw" style="background:#3fd0e0"></i>LOW 0.2–2 mg/m³</span>
+        <span><i class="sw" style="background:#9aa6b2"></i>MEDIUM 2–4</span>
+        <span><i class="sw" style="background:#f25560"></i>HIGH ≥ 4</span>
+        <span class="lg-src">bands: EASA SIB 2010-17R4</span>
+      </div>
+      <span class="map-note"></span>
+    </div>
+    <div class="jn-edit" role="toolbar" aria-label="Edit map">
+      <span class="seg-l">Edit map</span>
+      <div class="seg tools" role="group">
+        <button data-tool="none" class="on" title="Just look">Off</button>
+        <button data-tool="start" title="Click the map to move the start point (before launch)">Start</button>
+        <button data-tool="goal" title="Click the map to move the goal (before launch)">Goal</button>
+        <button data-tool="zone" title="Click the map to place a weather zone">Zone</button>
+        <button data-tool="erase" title="Click a weather zone to remove it">Erase</button>
+      </div>
+      <div class="zone-opts">
+        <select data-zopt="type" aria-label="Zone type"><option value="ash">Volcanic ash</option><option value="turb">Turbulence</option><option value="gust">Gust cell</option><option value="rain">Rain cell</option></select>
+        <div class="seg" role="group" aria-label="Severity"><button data-zsev="1">Low</button><button data-zsev="2">Med</button><button data-zsev="3" class="on">High</button></div>
+        <div class="seg" role="group" aria-label="Shape"><button data-zshape="circle" class="on">◯ Circle</button><button data-zshape="box">▢ Box</button></div>
+        <label class="zsize">Size <input type="range" min="1" max="4" step="1" value="2" data-zopt="size"><b>2</b></label>
+        <label class="zchk"><input type="checkbox" data-zopt="drift"> Drifts with wind</label>
+        <label class="zchk"><input type="checkbox" data-zopt="hidden"> Unreported</label>
+      </div>
+      <span class="edit-hint">Click the ground-station or drone map.</span>
+    </div>
+    <div class="jn-focus">
+    <div class="focus-bar">
+      <b class="fb-title">JANUS</b>
+      <div class="seg" role="group" aria-label="Focus layout">
+        <button data-focus="split" class="on">Split</button>
+        <button data-focus="gcs">Ground station</button>
+        <button data-focus="drone">Drone</button>
+      </div>
+      <div class="fb-ctl">
+        <button class="jn-btn primary" data-cmd="launch">Launch mission</button>
+        <button class="jn-btn clockbtn" data-cmd="pause"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path class="ic-pause" d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="3" stroke-linecap="round" fill="none"/><path class="ic-play" d="M7 5l12 7-12 7z" fill="currentColor"/></svg><span class="lbl">Stop clock</span></button>
+        <button class="jn-btn" data-cmd="rtl">Return to launch</button>
+        <button class="jn-btn danger" data-cmd="antenna">Pull antenna</button>
+      </div>
+      <div class="jn-clock"><span class="phase">SETUP</span><span class="t">T+0.0</span></div>
+      <button class="jn-reset small" data-cmd="reset" title="Reset"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M4 12a8 8 0 1 0 2.6-5.9M4 4v5h5"/></svg><span>RESET</span></button>
+      <button class="fs-btn" data-fs-exit title="Leave full screen (Esc)" aria-label="Leave full screen"><svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
+    </div>
+    <div class="jn-panes">
+      <section class="jn-pane" data-pane="gcs">
+        <header>
+          <div><h3>Ground station <span class="pred-chip">PREDICTED VIEW</span></h3><p>Only what arrived over the radio link</p></div>
+          <div class="pane-r"><span class="badge link-gcs">NO LINK</span>
+            <button class="fs-btn" data-focus-open="gcs" title="Full screen (Esc to leave)" aria-label="Ground station full screen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
+        </header>
+        <canvas class="map" data-map="gcs"></canvas>
+      </section>
+      <section class="jn-pane" data-pane="drone">
+        <header>
+          <div><h3>Drone onboard</h3><p>What the drone knows, measures and does</p></div>
+          <div class="pane-r"><span class="badge state-drone">IDLE</span>
+            <button class="fs-btn" data-focus-open="drone" title="Full screen (Esc to leave)" aria-label="Drone full screen"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button></div>
+        </header>
+        <canvas class="map" data-map="drone"></canvas>
+      </section>
+    </div>
+    </div>
+    <div class="jn-under">
+      <div class="jn-card">
+        <h5>Telemetry</h5>
+        <div class="sens-strip"></div>
+        <table class="ttable">
+          <thead><tr><th></th><th class="gcs">Ground station <small>from radio</small></th><th class="drn">Drone <small>onboard</small></th></tr></thead>
+          <tbody class="tt-body"></tbody>
+        </table>
+      </div>
+      <div class="jn-card wx-card">
+        <h5>Weather <small class="wx-src"></small></h5>
+        <div class="wx-grid"></div>
+        <div class="wx-metar"></div>
+        <h6>Volcanic ash advisories <small>simulated</small></h6>
+        <ul class="wx-ash"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ TELEMETRY -->
+  <section class="jn-tab" data-tab="telemetry" hidden>
+    <div class="chips" role="group" aria-label="Telemetry panels">
+      <button data-chip="link" class="on">Link statistics</button>
+      <button data-chip="packets" class="on">Packet statistics</button>
+      <button data-chip="updown" class="on">Uplink &amp; downlink</button>
+      <button data-chip="log" class="on">Event log</button>
+    </div>
+    <div class="tgrid">
+      <div class="jn-card" data-panel="link">
+        <h5>Link statistics</h5>
+        <div class="jn-chain">
+          <div class="jn-proc" data-proc="0"><span class="led"></span><div><b>Ground station</b><small class="pinfo">starting</small></div></div>
+          <div class="jn-wire" data-wire="up"><span class="wlab">uplink</span><i></i><span class="wstate">-</span></div>
+          <div class="jn-proc" data-proc="1"><span class="led"></span><div><b>Air relay</b><small class="pinfo">starting</small></div></div>
+          <div class="jn-wire" data-wire="dn"><span class="wlab">downlink</span><i></i><span class="wstate">-</span></div>
+          <div class="jn-proc" data-proc="2"><span class="led"></span><div><b>Drone agent</b><small class="pinfo">starting</small></div></div>
+        </div>
+        <div class="kv link-kv"></div>
+      </div>
+      <div class="jn-card" data-panel="packets">
+        <h5>Packet statistics <small>per endpoint</small></h5>
+        <div class="stats pkt-stats"></div>
+      </div>
+      <div class="jn-card wide" data-panel="updown">
+        <div class="strip-head">
+          <h5>Uplink &amp; downlink</h5>
+          <div class="strip-legend">
+            <span><i class="k ok"></i>delivered</span><span><i class="k rel"></i>reliable</span>
+            <span><i class="k lost"></i>lost in the air</span><span><i class="k drop"></i>dropped</span>
+            <span><i class="k cor"></i>corrupted (CRC)</span><span><i class="k blk"></i>link cut</span>
+          </div>
+        </div>
+        <canvas class="seis"></canvas>
+        <div class="ud-row">
+          <div class="stats ud-stats"></div>
+          <div class="sliders">
+            <label class="sl"><span>Uplink loss <b data-v="loss_up">0%</b></span><input type="range" min="0" max="0.9" step="0.05" data-imp="loss_up"></label>
+            <label class="sl"><span>Downlink loss <b data-v="loss_dn">0%</b></span><input type="range" min="0" max="0.9" step="0.05" data-imp="loss_dn"></label>
+            <label class="sl"><span>Latency <b data-v="latency_ms">20 ms</b></span><input type="range" min="0" max="1500" step="10" data-imp="latency_ms"></label>
+            <label class="sl"><span>Corruption <b data-v="corrupt">0%</b></span><input type="range" min="0" max="0.5" step="0.02" data-imp="corrupt"></label>
+            <button class="jn-btn" data-cmd="feed">Pause weather feed</button>
+          </div>
+        </div>
+      </div>
+      <div class="jn-card wide" data-panel="log">
+        <h5>Event log <small>GCS = ground station · DRN = drone</small></h5>
+        <ol class="log"></ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ REPORTS -->
+  <section class="jn-tab" data-tab="reports" hidden>
+    <div class="rep-bar">
+      <button class="jn-btn" data-rep="refresh">Refresh report</button>
+      <button class="jn-btn" data-rep="compare">Compare planners on this map</button>
+      <button class="jn-btn" data-rep="download">Download report (JSON)</button>
+      <span class="rep-note">Simulated run on this laptop. Illustrative values, not flight data.</span>
+    </div>
+    <div class="rep-body"><p class="rep-empty">No run yet. Generate a scenario and launch it.</p></div>
+    <div class="rep-compare"></div>
+  </section>
+
+  <div class="jn-toast" hidden></div>
+</div>
