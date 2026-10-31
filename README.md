@@ -39,8 +39,7 @@ he aircraft begins on a simple **nominal route**. A **<ins>forward-looking senso
 
 🢥 <ins>Live sensing & adaptive replanning</ins>
 
-Sensor range: <code>6 cells</code>
-A* is called <ins>only after a threat is detected</ins>.
+Onboard sensors that can perform independently from ground station
 </td> </tr> <tr> <td valign="top" width="50%">
 
 🢥 <ins>Avoidance rules</ins>
