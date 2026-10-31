@@ -1,5 +1,4 @@
 
-
 import pygame
 import heapq
 import math
@@ -18,7 +17,7 @@ pygame.init()
 
 GRID_WIDTH, GRID_HEIGHT = 1000, 680
 PANEL_WIDTH = 340
-DASHBOARD_HEIGHT = 110
+DASHBOARD_HEIGHT = 170
 WIDTH = GRID_WIDTH + PANEL_WIDTH
 HEIGHT = GRID_HEIGHT + DASHBOARD_HEIGHT
 
@@ -1075,7 +1074,45 @@ SENSOR_SIM_LAST_EVENT = "NO SIMULATED DETECTIONS"
 SENSOR_SIM_SEQUENCE = 0
 
 
-def queue_simulated_sensor_detection(kind, severity=None, is_map=False):
+def _clear_sensor_placement(path, segment, radius, is_map):
+    """Pick a spot ahead of the drone whose footprint covers neither the drone nor START,
+    so an abort-and-return always has a free cell to leave from and to fly home to.
+    If the route is about to end, the search continues straight ahead past its end."""
+    cols, rows = (MAP_COLS, MAP_ROWS) if is_map else (GRID_COLS, GRID_ROWS)
+    drone = path[segment]
+    home = map_coord_from_latlon(map_start_latlon, map_start_z) if is_map else start_cell
+    cand = list(path[segment + 1:segment + 9])
+    last = cand[-1] if cand else drone
+    prev = path[-2] if len(path) > 1 else last
+    dx = (last[0] > prev[0]) - (last[0] < prev[0])
+    dy = (last[1] > prev[1]) - (last[1] < prev[1])
+    k = 1
+    while len(cand) < 8 and (dx or dy):
+        c = (last[0] + dx * k, last[1] + dy * k, last[2])
+        if not (0 <= c[0] < cols and 0 <= c[1] < rows):
+            break
+        cand.append(c)
+        k += 1
+    if not cand:
+        cand = [drone]
+
+    def clear(c, r, margin):
+        # The abort fires at the next cell boundary, so the drone may have advanced a cell
+        # toward the hazard by then: keep a margin around it as well as around START.
+        return ((abs(c[0] - drone[0]) > r + margin or abs(c[1] - drone[1]) > r + margin)
+                and (abs(c[0] - home[0]) > r or abs(c[1] - home[1]) > r))
+
+    for margin in (2, 1, 0):
+        for r in sorted({radius, 2, 1}, reverse=True):
+            order = cand[:]
+            random.shuffle(order)
+            for c in order:
+                if clear(c, r, margin):
+                    return c, r
+    return cand[-1], 1
+
+
+def queue_simulated_sensor_detection(kind, severity=None, is_map=False, keep_clear=False):
     global SENSOR_SIM_SEQUENCE, SENSOR_SIM_EVENT_COUNT, SENSOR_SIM_LAST_EVENT, SENSOR_BRIDGE_STATUS
     kind = str(kind).lower()
     if kind not in ("ash", "turbulence"):
@@ -1088,9 +1125,13 @@ def queue_simulated_sensor_detection(kind, severity=None, is_map=False):
             severity = "HIGH"
     path = map_path if is_map else grid_path
     segment = map_current_segment if is_map else grid_current_segment
+    radius = random.randint(2, 3)
     if path:
-        max_ahead = max(1, min(8, len(path) - 1 - segment))
-        cell = path[min(len(path) - 1, segment + random.randint(1, max_ahead))]
+        if keep_clear:
+            cell, radius = _clear_sensor_placement(path, segment, radius, is_map)
+        else:
+            max_ahead = max(1, min(8, len(path) - 1 - segment))
+            cell = path[min(len(path) - 1, segment + random.randint(1, max_ahead))]
         gx, gy, gz = cell
     else:
         cols, rows = (MAP_COLS, MAP_ROWS) if is_map else (GRID_COLS, GRID_ROWS)
@@ -1099,7 +1140,7 @@ def queue_simulated_sensor_detection(kind, severity=None, is_map=False):
         gz = random.randrange(GRID_LAYERS)
     SENSOR_SIM_SEQUENCE += 1
     packet = {"id": f"SIM-{kind.upper()}-{SENSOR_SIM_SEQUENCE}", "type": kind,
-              "radius": random.randint(2, 3), "z_min": 0 if kind == "ash" else max(0, gz-1),
+              "radius": radius, "z_min": 0 if kind == "ash" else max(0, gz-1),
               "z_max": GRID_LAYERS-1 if kind == "ash" else min(GRID_LAYERS-1, gz+1),
               "severity": severity, "confidence": round(random.uniform(0.86, 0.99), 2)}
     if is_map:
@@ -1114,7 +1155,7 @@ def queue_simulated_sensor_detection(kind, severity=None, is_map=False):
     SENSOR_SIM_LAST_EVENT = (f"SIMULATED ASH LEVEL {severity}" if kind == "ash"
                              else f"SIMULATED {severity} TURBULENCE")
     SENSOR_BRIDGE_STATUS = "SIMULATED SENSOR DATA QUEUED"
-    return True
+    return packet["id"]
 
 
 def sensor_simulator_tick(is_map, dt):
@@ -1363,6 +1404,8 @@ grid_setup_message = ""
 grid_show_report = False
 grid_returning = False   # no path found -> flying back to START
 grid_aborted = False     # mission ended because no path existed
+grid_abort_request = None  # hazard id from a Y/T key press: abort at the next cell boundary
+grid_abort_reason = ""     # "HAZARD" when the abort was triggered by a detected hazard
 
 # Map route state
 map_path = []
@@ -1397,6 +1440,8 @@ map_status = "Map mode ready — press LOAD MAP / place start and goal."
 map_show_report = False
 map_returning = False
 map_aborted = False
+map_abort_request = None
+map_abort_reason = ""
 
 show_report = False
 
@@ -1452,14 +1497,7 @@ def grid_target_advance():
     global grid_threat_lock, grid_hazard_ahead, grid_hazard_cells
     global grid_returning, grid_aborted
     if grid_returning:
-        # RTH completes only at the exact launch cell.
-        if not grid_path or tuple(grid_path[-1]) != tuple(start_cell):
-            grid_returning = False
-            grid_aborted = True
-            grid_mission_complete = True
-            grid_mission_end_ticks = pygame.time.get_ticks()
-            announce("RTH ROUTE ENDED BEFORE HOME — MISSION ABORTED", "warning", 3.5)
-            return
+        # Reached START after "no possible path": end the mission here.
         grid_returning = False
         grid_aborted = True
         grid_mission_complete = True
@@ -1470,9 +1508,10 @@ def grid_target_advance():
     if grid_target_index + 1 < len(targets):
         grid_target_index += 1
         new_path = grid_route_for_leg(grid_path[-1], targets[grid_target_index])
-        if not new_path or tuple(new_path[-1]) != tuple(targets[grid_target_index]):
-            announce("WAYPOINT UNREACHABLE — RETURNING HOME", "warning", 2.2)
-            grid_begin_return_to_start()
+        if not new_path:
+            grid_mission_complete = True
+            grid_mission_end_ticks = pygame.time.get_ticks()
+            announce("WAYPOINT ROUTE FAILED — MISSION HALTED", "warning", 2.0)
             return
 
         grid_path = new_path
@@ -1497,11 +1536,6 @@ def grid_target_advance():
             if lows:
                 announce("LOW TURBULENCE DETECTED — HOLDING COURSE", "safe", 1.0)
     else:
-        # A mission is successful only at the exact configured goal cell.
-        if not grid_path or tuple(grid_path[-1]) != tuple(goal_cell):
-            grid_begin_return_to_start()
-            announce("GOAL NOT REACHED — RETURNING HOME", "warning", 2.2)
-            return
         grid_mission_complete = True
         grid_mission_end_ticks = pygame.time.get_ticks()
         announce("MISSION COMPLETE — GOAL REACHED", "safe", 2.5)
@@ -1514,14 +1548,6 @@ def map_target_advance():
     global map_threat_lock, map_hazard_ahead, map_hazard_cells
     global map_returning, map_aborted
     if map_returning:
-        exact_home = map_coord_from_latlon(map_start_latlon, map_start_z)
-        if not map_path or tuple(map_path[-1]) != tuple(exact_home):
-            map_returning = False
-            map_aborted = True
-            map_mission_complete = True
-            map_mission_end_ticks = pygame.time.get_ticks()
-            announce("RTH ROUTE ENDED BEFORE HOME — MISSION ABORTED", "warning", 3.5)
-            return
         map_returning = False
         map_aborted = True
         map_mission_complete = True
@@ -1532,9 +1558,10 @@ def map_target_advance():
     if map_target_index + 1 < len(targets):
         map_target_index += 1
         new_path = map_route_for_leg(map_path[-1], targets[map_target_index])
-        if not new_path or tuple(new_path[-1]) != tuple(targets[map_target_index]):
-            announce("WAYPOINT UNREACHABLE — RETURNING HOME", "warning", 2.2)
-            map_begin_return_to_start()
+        if not new_path:
+            map_mission_complete = True
+            map_mission_end_ticks = pygame.time.get_ticks()
+            announce("WAYPOINT ROUTE FAILED — MISSION HALTED", "warning", 2.0)
             return
 
         map_path = new_path
@@ -1556,12 +1583,6 @@ def map_target_advance():
             if lows:
                 announce("LOW TURBULENCE DETECTED — HOLDING COURSE", "safe", 1.0)
     else:
-        # A mission is successful only at the exact configured geographic goal cell.
-        exact_goal = map_coord_from_latlon(map_goal_latlon, map_goal_z)
-        if not map_path or tuple(map_path[-1]) != tuple(exact_goal):
-            map_begin_return_to_start()
-            announce("GOAL NOT REACHED — RETURNING HOME", "warning", 2.2)
-            return
         map_mission_complete = True
         map_mission_end_ticks = pygame.time.get_ticks()
         announce("MISSION COMPLETE — GOAL REACHED", "safe", 2.5)
@@ -1819,7 +1840,7 @@ def draw_replan_alert(key):
     pygame.draw.circle(screen, col, pos, int(14 + (3 * pulse if phase == "DETECTED" else 0)), 2)
 
     # 6. Text tags: one on the threat, one on the drone.
-    tag_txt = {"DETECTED": "THREAT: ", "CORRECTED": "AVOIDED: ", "FAILED": "NO ROUTE: "}[phase] + a["label"]
+    tag_txt = (a.get("tag") or {"DETECTED": "THREAT: ", "CORRECTED": "AVOIDED: ", "FAILED": "NO ROUTE: "}[phase]) + a["label"]
     tag = font_tiny.render(tag_txt, True, rcol)
     tx = min(max(4, rect.x), GRID_WIDTH - tag.get_width() - 4)
     ty = rect.y - 18 if rect.y >= 22 else rect.bottom + 4  # keep clear of the zone's own label
@@ -1835,7 +1856,7 @@ def draw_replan_alert(key):
     elif phase == "CORRECTED":
         msg = "NEW ROUTE LOCKED"
     else:
-        msg = "NO POSSIBLE PATH - RETURNING TO START"
+        msg = a.get("msg", "NO POSSIBLE PATH - RETURNING TO START")
     m = font_small.render(msg, True, col)
     box = pygame.Rect(pos[0] + 16, pos[1] + 16, m.get_width() + 12,
                       m.get_height() + 8 + (14 if show_bar else 0))
@@ -1857,13 +1878,11 @@ def draw_replan_alert(key):
         pygame.draw.rect(screen, col, bar, 1)
 
 
-def safe_route_to_target(start, target, cols, rows, is_free, max_goal_radius=0,
-                         hazard_probe=None):
-    """Time-aware A* to the exact target cell.
+def safe_route_to_target(start, target, cols, rows, is_free, max_goal_radius=4):
+    """A* fallback that can approach a blocked goal/waypoint from its nearest safe cell.
 
-    `is_free` checks permanent geometry (solid obstacles). `hazard_probe` checks
-    where static and moving avoidance zones will be when the drone reaches a cell.
-    The target is never silently replaced by a nearby cell.
+    It never enters a blocked cell. If the exact target is occupied by a hazard,
+    it selects the closest reachable safe cell around that target.
     """
     start, target = tuple(start), tuple(target)
     if not is_free(start):
@@ -1885,44 +1904,32 @@ def safe_route_to_target(start, target, cols, rows, is_free, max_goal_radius=0,
     if not candidates:
         return None
 
-    goal_cells = {cell for _, cell in candidates}
-    speed = max(0.1, DRONE_SPEED_VALUES[DRONE_SPEED_INDEX])
-    frontier = [(min(octile_heuristic(start, g) for g in goal_cells), 0, start)]
-    came_from = {}
-    cost_so_far = {start: 0.0}
-    arrival_time = {start: 0.0}
-    serial = 1
-
-    while frontier:
-        _, _, current = heapq.heappop(frontier)
-        current_time = arrival_time[current]
-        if current in goal_cells:
-            if hazard_probe is None or hazard_probe(current, current_time) is None:
-                return reconstruct_path(came_from, current)
-            continue
-
-        for nxt in neighbor_moves(current, cols, rows, is_free):
-            step_time = step_length(current, nxt) / speed
-            next_time = current_time + step_time
-            if hazard_probe is not None:
-                if hazard_probe(nxt, next_time) is not None:
-                    continue
-                # A diagonal must not cut through the corner of a hazard volume.
-                if current[0] != nxt[0] and current[1] != nxt[1]:
-                    side_a = (nxt[0], current[1], current[2])
-                    side_b = (current[0], nxt[1], current[2])
-                    if hazard_probe(side_a, next_time) is not None or hazard_probe(side_b, next_time) is not None:
-                        continue
-
-            step_cost = base_move_cost(current, nxt)
-            new_cost = cost_so_far[current] + step_cost
-            if new_cost < cost_so_far.get(nxt, float("inf")):
-                cost_so_far[nxt] = new_cost
-                came_from[nxt] = current
-                arrival_time[nxt] = next_time
-                heuristic = min(octile_heuristic(nxt, g) for g in goal_cells)
-                heapq.heappush(frontier, (new_cost + heuristic, serial, nxt))
-                serial += 1
+    # Three independent candidate-order attempts help avoid repeatedly choosing
+    # the same side of a moving/irregular hazard.
+    random.shuffle(candidates)
+    for _attempt in range(3):
+        goals = sorted(candidates, key=lambda item: item[0] + random.random() * 0.15)
+        goal_cells = {cell for _, cell in goals}
+        frontier = [(0.0, 0, start)]
+        came_from, cost_so_far = {}, {start: 0.0}
+        serial = 1
+        found = None
+        while frontier:
+            _, _, current = heapq.heappop(frontier)
+            if current in goal_cells:
+                found = current
+                break
+            for nxt in neighbor_moves(current, cols, rows, is_free):
+                step = base_move_cost(current, nxt)
+                new_cost = cost_so_far[current] + step
+                if new_cost < cost_so_far.get(nxt, float("inf")):
+                    cost_so_far[nxt] = new_cost
+                    came_from[nxt] = current
+                    heuristic = min(octile_heuristic(nxt, g) for g in goal_cells)
+                    heapq.heappush(frontier, (new_cost + heuristic, serial, nxt))
+                    serial += 1
+        if found is not None:
+            return reconstruct_path(came_from, found)
     return None
 
 
@@ -1955,16 +1962,20 @@ def map_start_replan_sequence(threat):
 
 
 def grid_clear_return_state():
-    global grid_returning, grid_aborted
+    global grid_returning, grid_aborted, grid_abort_request, grid_abort_reason
     grid_returning = False
     grid_aborted = False
+    grid_abort_request = None
+    grid_abort_reason = ""
     reset_hazard_motion()      # zones return to launch positions, motion clock -> 0
 
 
 def map_clear_return_state():
-    global map_returning, map_aborted
+    global map_returning, map_aborted, map_abort_request, map_abort_reason
     map_returning = False
     map_aborted = False
+    map_abort_request = None
+    map_abort_reason = ""
     reset_hazard_motion()
 
 
@@ -1973,21 +1984,17 @@ def grid_begin_return_to_start():
     global grid_path, grid_old_path, grid_old_path_timer, grid_returning, grid_aborted
     global grid_progress, grid_threat_lock, grid_hazard_ahead, grid_current_segment
     global grid_mission_complete, grid_mission_end_ticks, grid_scan_due, grid_last_counted_segment
-    global grid_response_state, grid_response_timer, grid_pending_threat
-    # If an avoidance replan fails while already on RTH, stop safely rather
-    # than repeatedly rebuilding the same impossible return route.
-    if grid_returning:
-        grid_returning = False
-        grid_aborted = True
-        grid_mission_complete = True
-        grid_mission_end_ticks = pygame.time.get_ticks()
-        announce("RTH BLOCKED — HOLDING POSITION / MISSION ABORTED", "warning", 3.5)
-        return
-    # RTH must reach the exact launch cell; never accept a nearby approach cell.
+    # Return at the altitude the drone is currently holding. Keep the route
+    # on this single layer instead of climbing/descending during RTH.
+    current = grid_current_cell()
+    return_altitude = current[2]
+    home_at_current_altitude = (start_cell[0], start_cell[1], return_altitude)
+    same_altitude_free = lambda cell: (
+        cell[2] == return_altitude and grid_cell_free(cell)
+    )
     back = safe_route_to_target(
-        grid_current_cell(), start_cell, GRID_COLS, GRID_ROWS,
-        lambda c: not in_any_obstacle_grid(c), max_goal_radius=0,
-        hazard_probe=make_hazard_probe(hazards, pad=0.2))
+        current, home_at_current_altitude, GRID_COLS, GRID_ROWS,
+        same_altitude_free, max_goal_radius=0)
     if back is None:
         grid_returning = False
         grid_aborted = True
@@ -2000,9 +2007,6 @@ def grid_begin_return_to_start():
     # Replace the active route from the drone's actual current cell and reset
     # its segment index. Keeping the old prefix can leave the aircraft indexed
     # against a stale segment after an RTH route is installed.
-    grid_response_state = "IDLE"
-    grid_response_timer = 0.0
-    grid_pending_threat = None
     grid_path = back
     grid_current_segment = 0
     grid_last_counted_segment = -1
@@ -2012,27 +2016,26 @@ def grid_begin_return_to_start():
     grid_returning = True
     grid_threat_lock = None
     grid_hazard_ahead = False
-    announce("NO SAFE ROUTE TO TARGET — RTH ACTIVE", "warning", 3.0)
+    announce("NO SAFE ROUTE TO TARGET — HOLDING ALTITUDE AND RETURNING HOME", "warning", 3.0)
 
 
 def map_begin_return_to_start():
     global map_path, map_old_path, map_old_path_timer, map_returning, map_aborted
     global map_progress, map_threat_lock, map_hazard_ahead, map_current_segment
     global map_mission_complete, map_mission_end_ticks, map_scan_due, map_last_counted_segment
-    global map_response_state, map_response_timer, map_pending_threat
-    if map_returning:
-        map_returning = False
-        map_aborted = True
-        map_mission_complete = True
-        map_mission_end_ticks = pygame.time.get_ticks()
-        announce("RTH BLOCKED — HOLDING POSITION / MISSION ABORTED", "warning", 3.5)
-        return
-    home = map_coord_from_latlon(map_start_latlon, map_start_z)
+    # Hold the drone's current altitude for the entire return leg.
+    current = map_current_cell()
+    return_altitude = current[2]
+    home_at_current_altitude = map_coord_from_latlon(
+        map_start_latlon, return_altitude)
+    same_altitude_free = lambda cell: (
+        cell[2] == return_altitude
+        and not in_any_map_obstacle(cell)
+        and not any(hazard_blocks_cell(cell, h) for h in map_hazards)
+    )
     back = safe_route_to_target(
-        map_current_cell(), home, MAP_COLS, MAP_ROWS,
-        lambda c: not in_any_map_obstacle(c),
-        max_goal_radius=0,
-        hazard_probe=make_hazard_probe(map_hazards, pad=0.2))
+        current, home_at_current_altitude, MAP_COLS, MAP_ROWS,
+        same_altitude_free, max_goal_radius=0)
     if back is None:
         map_returning = False
         map_aborted = True
@@ -2042,9 +2045,6 @@ def map_begin_return_to_start():
         return
     map_old_path = map_path[map_current_segment:]
     map_old_path_timer = 3.5
-    map_response_state = "IDLE"
-    map_response_timer = 0.0
-    map_pending_threat = None
     map_path = back
     map_current_segment = 0
     map_last_counted_segment = -1
@@ -2054,7 +2054,76 @@ def map_begin_return_to_start():
     map_returning = True
     map_threat_lock = None
     map_hazard_ahead = False
-    announce("NO SAFE ROUTE TO TARGET — RTH ACTIVE", "warning", 3.0)
+    announce("NO SAFE ROUTE TO TARGET — HOLDING ALTITUDE AND RETURNING HOME", "warning", 3.0)
+
+
+def grid_abort_for_hazard():
+    """Y/T key: a hazard just appeared on the route. Cancel any replan in progress,
+    abort the mission and fly straight back to START instead of rerouting."""
+    global grid_abort_request, grid_abort_reason
+    global grid_response_state, grid_response_timer, grid_pending_threat, grid_threat_lock
+    hid, grid_abort_request = grid_abort_request, None
+    if grid_returning or grid_mission_complete or not grid_path:
+        return
+    threat = next((t for t in grid_scan_threats()
+                   if t["kind"] == "hazard" and t["obj"].get("id") == hid), None)
+    if threat is None:
+        h = next((x for x in hazards if x.get("id") == hid), None)
+        if h is not None:
+            threat = {"kind": "hazard", "obj": h, "index": grid_current_segment}
+    if threat is not None:
+        alert = make_alert(threat, grid_path, grid_current_segment)
+        alert.update(phase="FAILED", tag="ABORT: ", msg="HAZARD DETECTED - ABORTING, RETURNING TO START")
+        alert["until"] = time.perf_counter() + 4.0
+        ALERT["grid"] = alert
+    grid_response_state = "IDLE"
+    grid_response_timer = 0.0
+    grid_pending_threat = None
+    grid_threat_lock = None
+    grid_abort_reason = "HAZARD"
+    grid_begin_return_to_start()
+    if grid_returning:
+        announce("HAZARD DETECTED — MISSION ABORTED, RETURNING TO START", "warning", 3.0)
+
+
+def map_abort_for_hazard():
+    global map_abort_request, map_abort_reason
+    global map_response_state, map_response_timer, map_pending_threat, map_threat_lock
+    hid, map_abort_request = map_abort_request, None
+    if map_returning or map_mission_complete or not map_path:
+        return
+    threat = next((t for t in map_scan_threats()
+                   if t["kind"] == "hazard" and t["obj"].get("id") == hid), None)
+    if threat is None:
+        h = next((x for x in map_hazards if x.get("id") == hid), None)
+        if h is not None:
+            threat = {"kind": "hazard", "obj": h, "index": map_current_segment}
+    if threat is not None:
+        alert = make_alert(threat, map_path, map_current_segment)
+        alert.update(phase="FAILED", tag="ABORT: ", msg="HAZARD DETECTED - ABORTING, RETURNING TO START")
+        alert["until"] = time.perf_counter() + 4.0
+        ALERT["map"] = alert
+    map_response_state = "IDLE"
+    map_response_timer = 0.0
+    map_pending_threat = None
+    map_threat_lock = None
+    map_abort_reason = "HAZARD"
+    map_begin_return_to_start()
+    if map_returning:
+        announce("HAZARD DETECTED — MISSION ABORTED, RETURNING TO START", "warning", 3.0)
+
+
+def trigger_hazard_abort(kind, severity, is_map):
+    """Y / T keys: drop an ash cloud / turbulence cell on the route right away and abort."""
+    global grid_abort_request, map_abort_request
+    hid = queue_simulated_sensor_detection(kind, severity, is_map, keep_clear=True)
+    if not hid:
+        return
+    if is_map:
+        if map_path and not map_mission_complete and not map_returning:
+            map_abort_request = hid
+    elif grid_path and not grid_mission_complete and not grid_returning:
+        grid_abort_request = hid
 
 
 def grid_execute_replan():
@@ -2072,14 +2141,9 @@ def grid_execute_replan():
     goal = start_cell if grid_returning else targets[grid_target_index]
     old_path = grid_path[grid_current_segment:]
     t0 = time.perf_counter()
-    new_remaining = safe_route_to_target(
-        start, goal, GRID_COLS, GRID_ROWS,
-        lambda c: not in_any_obstacle_grid(c),
-        hazard_probe=make_hazard_probe(hazards, pad=0.2))
+    new_remaining = safe_route_to_target(start, goal, GRID_COLS, GRID_ROWS, grid_cell_free)
     elapsed = (time.perf_counter() - t0) * 1000.0
     grid_last_replan_ms = elapsed
-    if new_remaining is not None and tuple(new_remaining[-1]) != tuple(goal):
-        new_remaining = None
     if new_remaining is not None:
         grid_old_path = old_path
         grid_old_path_timer = 3.5
@@ -2101,7 +2165,7 @@ def grid_execute_replan():
         grid_response_timer = 0.0
         grid_pending_threat = None
         grid_threat_lock = None
-        announce("NO SAFE REROUTE — RETURNING HOME", "warning", 2.2)
+        announce("NO SAFE REROUTE — HOLDING ALTITUDE, RETURNING HOME", "warning", 2.2)
         grid_begin_return_to_start()
     if new_remaining is not None:
         grid_failed_replan_attempts = 0
@@ -2126,12 +2190,10 @@ def map_execute_replan():
     t0 = time.perf_counter()
     new_remaining = safe_route_to_target(
         start, goal, MAP_COLS, MAP_ROWS,
-        lambda c: not in_any_map_obstacle(c),
-        hazard_probe=make_hazard_probe(map_hazards, pad=0.2))
+        lambda c: (not in_any_map_obstacle(c)) and
+                  not any(hazard_blocks_cell(c, h) for h in map_hazards))
     elapsed = (time.perf_counter() - t0) * 1000.0
     map_last_replan_ms = elapsed
-    if new_remaining is not None and tuple(new_remaining[-1]) != tuple(goal):
-        new_remaining = None
     if new_remaining is not None:
         map_old_path = old_path
         map_old_path_timer = 3.5
@@ -2153,7 +2215,7 @@ def map_execute_replan():
         map_response_timer = 0.0
         map_pending_threat = None
         map_threat_lock = None
-        announce("NO SAFE REROUTE — RETURNING HOME", "warning", 2.2)
+        announce("NO SAFE REROUTE — HOLDING ALTITUDE, RETURNING HOME", "warning", 2.2)
         map_begin_return_to_start()
     if new_remaining is not None:
         map_failed_replan_attempts = 0
@@ -2174,6 +2236,11 @@ def grid_update_mission(dt):
 
     if grid_old_path_timer > 0:
         grid_old_path_timer = max(0.0, grid_old_path_timer - dt)
+
+    # Y/T hazard: abort on the next cell boundary (so the drone never jumps back mid-cell).
+    if grid_abort_request and (grid_progress <= 0.001 or grid_scan_due):
+        grid_abort_for_hazard()
+        return
 
     if grid_response_state == "COMPUTING":
         grid_execute_replan()  # BendyRuler runs here, one frame after "COMPUTING" was drawn
@@ -2243,6 +2310,10 @@ def map_update_mission(dt):
 
     if map_old_path_timer > 0:
         map_old_path_timer = max(0.0, map_old_path_timer - dt)
+
+    if map_abort_request and (map_progress <= 0.001 or map_scan_due):
+        map_abort_for_hazard()
+        return
 
     if map_response_state == "COMPUTING":
         map_execute_replan()
@@ -3580,6 +3651,7 @@ def draw_avionics_weather_overlay():
 
 
 def draw_legend(is_map=False):
+    """Render the legend in a dedicated strip below the simulation view."""
     items = [(START_COLOR, "Start"), (GOAL_COLOR, "Goal"),
              (DRONE_COLOR, "Drone"), (WAYPOINT_COLOR, "Waypoint"),
              (OBSTACLE_FULL_COLOR, "Solid obstacle"),
@@ -3587,20 +3659,26 @@ def draw_legend(is_map=False):
              (TURB_LOW[:3], "Low turbulence (pass-through)"),
              (TURB_HIGH[:3], "High turbulence (avoid)"),
              (ARROW_COLOR, "Arrow = zone drifting")]
-    row_h = 18
-    w = 250
-    h = 10 + row_h * len(items)
-    box = pygame.Rect(GRID_WIDTH - w - 12, 12, w, h)
-    layer = pygame.Surface(box.size, pygame.SRCALPHA)
-    layer.fill((*LEGEND_BG_COLOR, 205))
-    screen.blit(layer, box.topleft)
-    pygame.draw.rect(screen, UI_BORDER, box, 1, border_radius=UI_RADIUS)
-    draw_hud_corners(screen, box, UI_BORDER, length=7, thickness=1)
-    y = 8
-    for color, label in items:
-        pygame.draw.rect(screen, color, (box.left + 8, box.top + y + 3, 11, 11))
-        screen.blit(font_micro.render(label, True, TEXT_MAIN), (box.left + 26, box.top + y))
-        y += row_h
+
+    # The dashboard is taller now, leaving the map/grid itself unobstructed.
+    strip_y = GRID_HEIGHT + 105
+    strip_h = 42
+    strip = pygame.Rect(12, strip_y, WIDTH - 24, strip_h)
+    layer = pygame.Surface(strip.size, pygame.SRCALPHA)
+    layer.fill((*LEGEND_BG_COLOR, 225))
+    screen.blit(layer, strip.topleft)
+    pygame.draw.rect(screen, UI_BORDER_SOFT, strip, 1, border_radius=UI_RADIUS)
+
+    # Two compact rows keep long labels readable without covering the map/grid.
+    rows = (items[:5], items[5:])
+    for row_index, row_items in enumerate(rows):
+        y = strip_y + 5 + row_index * 18
+        x = strip.x + 10
+        for color, label in row_items:
+            pygame.draw.rect(screen, color, (x, y + 2, 9, 9))
+            text_surf = font_micro.render(label, True, TEXT_MAIN)
+            screen.blit(text_surf, (x + 14, y))
+            x += 24 + text_surf.get_width() + 18
 
 
 def draw_dashboard(is_map=False):
@@ -3701,7 +3779,10 @@ def draw_return_status(is_map=False):
     returning = map_returning if is_map else grid_returning
     if not (aborted or returning):
         return
-    text = "NO POSSIBLE PATH — RETURNING TO START" if returning else "NO POSSIBLE PATH — MISSION ABORTED"
+    if (map_abort_reason if is_map else grid_abort_reason) == "HAZARD":
+        text = "HAZARD DETECTED — RETURNING TO START" if returning else "HAZARD DETECTED — MISSION ABORTED"
+    else:
+        text = "NO POSSIBLE PATH — RETURNING TO START" if returning else "NO POSSIBLE PATH — MISSION ABORTED"
     txt = font_small.render(text, True, (255, 130, 110))
     box = pygame.Rect(12, 12 if is_map else 72, txt.get_width() + 20, txt.get_height() + 12)
     bg = pygame.Surface(box.size, pygame.SRCALPHA)
@@ -4518,10 +4599,10 @@ while running:
             if sim_state == "RUNNING" and event.key == pygame.K_a:
                 queue_simulated_sensor_detection("ash", 3, map_mode)
             elif sim_state == "RUNNING" and event.key == pygame.K_t:
-                queue_simulated_sensor_detection("turbulence", "HIGH", map_mode)
+                trigger_hazard_abort("turbulence", "HIGH", map_mode)
             elif sim_state == "RUNNING" and event.key == pygame.K_y:
                 kind = random.choice(("ash", "turbulence"))
-                queue_simulated_sensor_detection(kind, 3 if kind == "ash" else "HIGH", map_mode)
+                trigger_hazard_abort(kind, 3 if kind == "ash" else "HIGH", map_mode)
             elif sim_state == "RUNNING" and event.key == pygame.K_c:
                 clear_simulated_sensor_detections(map_mode)
             elif event.key == pygame.K_F11:
