@@ -127,6 +127,12 @@ WARNING_COLOR = (190, 73, 60)
 SAFE_COLOR = (126, 184, 82)
 REPLAN_FLASH_COLOR = (198, 184, 67)
 
+# Waypoints: vivid magenta so they stand out on both the dark grid and the light OSM map.
+WAYPOINT_COLOR = (255, 64, 200)
+WAYPOINT_LIGHT = (255, 160, 228)
+WAYPOINT_RING = (255, 255, 255)
+WAYPOINT_OUTLINE = (24, 0, 18)
+
 DASHBOARD_BG_COLOR = (8, 13, 9)
 DASHBOARD_LABEL_COLOR = (119, 143, 113)
 DASHBOARD_VALUE_COLOR = (204, 218, 181)
@@ -263,10 +269,13 @@ def hazard_cost(h):
 
 
 def hazard_requires_replan(h):
-    # Every turbulence zone and every ash zone is an avoidance volume.
-    # This keeps the live route from ever intentionally crossing a
-    # turbulence/ash cell while travelling to a waypoint.
-    return h["type"] in ("ash", "turbulence")
+    # Ash and MODERATE / HIGH turbulence are hard avoidance volumes.
+    # LOW turbulence is pass-through (as the legend states): it is only a cost
+    # in A*, so when it is the only way through, the drone flies through it
+    # instead of reporting "no possible path".
+    if h["type"] == "ash":
+        return True
+    return h.get("severity", "MODERATE") in ("MODERATE", "HIGH")
 
 
 def hazard_blocks_cell(cell, h):
@@ -846,6 +855,8 @@ grid_panel_scroll = 0
 grid_panel_content_height = 0
 grid_setup_message = ""
 grid_show_report = False
+grid_returning = False   # no path found -> flying back to START
+grid_aborted = False     # mission ended because no path existed
 
 # Map route state
 map_path = []
@@ -877,6 +888,8 @@ map_panel_scroll = 0
 map_panel_content_height = 0
 map_status = "Map mode ready — press LOAD MAP / place start and goal."
 map_show_report = False
+map_returning = False
+map_aborted = False
 
 show_report = False
 
@@ -930,6 +943,15 @@ def grid_target_advance():
     global grid_path, grid_current_segment, grid_progress, grid_target_index
     global grid_mission_complete, grid_mission_end_ticks
     global grid_threat_lock, grid_hazard_ahead, grid_hazard_cells
+    global grid_returning, grid_aborted
+    if grid_returning:
+        # Reached START after "no possible path": end the mission here.
+        grid_returning = False
+        grid_aborted = True
+        grid_mission_complete = True
+        grid_mission_end_ticks = pygame.time.get_ticks()
+        announce("RETURNED TO START — MISSION ABORTED", "warning", 3.5)
+        return
     targets = build_targets_grid()
     if grid_target_index + 1 < len(targets):
         grid_target_index += 1
@@ -972,6 +994,14 @@ def map_target_advance():
     global map_path, map_current_segment, map_progress, map_target_index
     global map_mission_complete, map_mission_end_ticks
     global map_threat_lock, map_hazard_ahead, map_hazard_cells
+    global map_returning, map_aborted
+    if map_returning:
+        map_returning = False
+        map_aborted = True
+        map_mission_complete = True
+        map_mission_end_ticks = pygame.time.get_ticks()
+        announce("RETURNED TO START — MISSION ABORTED", "warning", 3.5)
+        return
     targets = build_targets_map()
     if map_target_index + 1 < len(targets):
         map_target_index += 1
@@ -1252,7 +1282,7 @@ def draw_replan_alert(key):
     elif phase == "CORRECTED":
         msg = "NEW ROUTE LOCKED"
     else:
-        msg = "NO SAFE ROUTE FOUND"
+        msg = "NO POSSIBLE PATH - RETURNING TO START"
     m = font_small.render(msg, True, col)
     box = pygame.Rect(pos[0] + 16, pos[1] + 16, m.get_width() + 12,
                       m.get_height() + 8 + (14 if show_bar else 0))
@@ -1302,6 +1332,67 @@ def map_start_replan_sequence(threat):
     announce(f"HAZARD DETECTED — {label} — CHANGING COURSE", "warning", 1.7)
 
 
+def grid_clear_return_state():
+    global grid_returning, grid_aborted
+    grid_returning = False
+    grid_aborted = False
+
+
+def map_clear_return_state():
+    global map_returning, map_aborted
+    map_returning = False
+    map_aborted = False
+
+
+def grid_begin_return_to_start():
+    """No safe route to the target exists: abandon the leg and fly back to START."""
+    global grid_path, grid_old_path, grid_old_path_timer, grid_returning, grid_aborted
+    global grid_progress, grid_threat_lock, grid_hazard_ahead
+    global grid_mission_complete, grid_mission_end_ticks
+    # If we are already returning and even that fails, stop instead of looping.
+    back = None if grid_returning else grid_astar(grid_current_cell(), start_cell)
+    if back is None:
+        grid_returning = False
+        grid_aborted = True
+        grid_mission_complete = True
+        grid_mission_end_ticks = pygame.time.get_ticks()
+        announce("NO POSSIBLE PATH — NO SAFE ROUTE BACK, HOLDING POSITION", "warning", 3.5)
+        return
+    grid_old_path = grid_path[grid_current_segment:]
+    grid_old_path_timer = 3.5
+    grid_path = grid_path[:grid_current_segment] + back
+    refresh_grid_pixel_path()
+    grid_progress = 0.0
+    grid_returning = True
+    grid_threat_lock = None
+    grid_hazard_ahead = False
+    announce("NO POSSIBLE PATH — RETURNING TO START", "warning", 3.0)
+
+
+def map_begin_return_to_start():
+    global map_path, map_old_path, map_old_path_timer, map_returning, map_aborted
+    global map_progress, map_threat_lock, map_hazard_ahead
+    global map_mission_complete, map_mission_end_ticks
+    home = map_coord_from_latlon(map_start_latlon, map_start_z)
+    back = None if map_returning else map_astar(map_current_cell(), home)
+    if back is None:
+        map_returning = False
+        map_aborted = True
+        map_mission_complete = True
+        map_mission_end_ticks = pygame.time.get_ticks()
+        announce("NO POSSIBLE PATH — NO SAFE ROUTE BACK, HOLDING POSITION", "warning", 3.5)
+        return
+    map_old_path = map_path[map_current_segment:]
+    map_old_path_timer = 3.5
+    map_path = map_path[:map_current_segment] + back
+    refresh_map_pixel_path()
+    map_progress = 0.0
+    map_returning = True
+    map_threat_lock = None
+    map_hazard_ahead = False
+    announce("NO POSSIBLE PATH — RETURNING TO START", "warning", 3.0)
+
+
 def grid_execute_replan():
     global grid_path, grid_pixel_path, grid_replan_count, grid_last_replan_ms
     global grid_response_state, grid_response_timer, grid_pending_threat, grid_old_path, grid_old_path_timer
@@ -1314,7 +1405,7 @@ def grid_execute_replan():
         grid_response_state = "IDLE"
         return
     start = grid_current_cell()
-    goal = targets[grid_target_index]
+    goal = start_cell if grid_returning else targets[grid_target_index]
     old_path = grid_path[grid_current_segment:]
     t0 = time.perf_counter()
     new_remaining = grid_astar(start, goal)
@@ -1335,7 +1426,7 @@ def grid_execute_replan():
         grid_response_state = "IDLE"
         grid_response_timer = 0.0
         set_alert_phase("grid", "FAILED")
-        announce("REPLAN FAILED — HOLDING CURRENT TRAJECTORY", "warning", 2.0)
+        grid_begin_return_to_start()
     grid_pending_threat = None
     grid_hazard_ahead = True
 
@@ -1352,7 +1443,7 @@ def map_execute_replan():
         map_response_state = "IDLE"
         return
     start = map_current_cell()
-    goal = targets[map_target_index]
+    goal = map_coord_from_latlon(map_start_latlon, map_start_z) if map_returning else targets[map_target_index]
     old_path = map_path[map_current_segment:]
     t0 = time.perf_counter()
     new_remaining = map_astar(start, goal)
@@ -1373,7 +1464,7 @@ def map_execute_replan():
         map_response_state = "IDLE"
         map_response_timer = 0.0
         set_alert_phase("map", "FAILED")
-        announce("REPLAN FAILED — HOLDING CURRENT TRAJECTORY", "warning", 2.0)
+        map_begin_return_to_start()
     map_pending_threat = None
     map_hazard_ahead = True
 
@@ -1580,6 +1671,7 @@ def clear_grid_scenario(clear_waypoints=True):
     grid_old_path = []
     grid_old_path_timer = 0.0
     grid_show_report = False
+    grid_clear_return_state()
     globals()["sim_state"] = "SETUP"
 
 
@@ -1608,6 +1700,7 @@ def reset_grid_flight():
     grid_old_path = []
     grid_old_path_timer = 0.0
     grid_show_report = False
+    grid_clear_return_state()
     grid_setup_message = "Flight reset — scenario retained."
     globals()["sim_state"] = "SETUP"
 
@@ -1650,6 +1743,7 @@ def clear_map_scenario(clear_waypoints=True):
     map_old_path = []
     map_old_path_timer = 0.0
     map_show_report = False
+    map_clear_return_state()
     globals()["sim_state"] = "SETUP"
 
 
@@ -1676,6 +1770,7 @@ def reset_map_flight():
     map_old_path = []
     map_old_path_timer = 0.0
     map_show_report = False
+    map_clear_return_state()
     map_status = "Flight reset — scenario retained."
     globals()["sim_state"] = "SETUP"
 
@@ -1879,6 +1974,7 @@ def start_grid_simulation():
     grid_old_path_timer = 0.0
     grid_show_report = False
     ALERT["grid"] = None
+    grid_clear_return_state()
     grid_mission_start_ticks = pygame.time.get_ticks()
     grid_mission_end_ticks = grid_mission_start_ticks
     grid_setup_message = "LIVE SENSOR ENABLED — obstacle, turbulence and ash avoidance active."
@@ -1943,6 +2039,7 @@ def start_map_simulation():
     map_old_path_timer = 0.0
     map_show_report = False
     ALERT["map"] = None
+    map_clear_return_state()
     map_mission_start_ticks = pygame.time.get_ticks()
     map_mission_end_ticks = map_mission_start_ticks
     map_status = "LIVE GEO SENSOR ENABLED — adaptive route replanning active."
@@ -2152,8 +2249,8 @@ def draw_altitude_panel(path, hazards_to_draw, obstacles_to_draw=None, is_map=Fa
                 d = distances[idx]
                 x = graph.left + (d / total) * graph.width
                 y = graph.bottom - (cell[2] / max(1, GRID_LAYERS - 1)) * graph.height
-                pygame.draw.line(screen, (130, 190, 255), (int(x), graph.top), (int(x), graph.bottom), 1)
-                tag = font_micro.render(f"WP{waypoint_lookup[cell]}", True, (175, 210, 255))
+                pygame.draw.line(screen, WAYPOINT_COLOR, (int(x), graph.top), (int(x), graph.bottom), 1)
+                tag = font_micro.render(f"WP{waypoint_lookup[cell]}", True, WAYPOINT_LIGHT)
                 screen.blit(tag, (int(x) + 2, graph.top + 2))
 
     # Current drone position.
@@ -2243,9 +2340,7 @@ def draw_grid_path():
 
     # Waypoint markers
     for i, wp in enumerate(waypoints, start=1):
-        p = grid_to_pixel(wp)
-        pygame.draw.circle(screen, (130, 190, 255), p, 7)
-        screen.blit(font_micro.render(f"WP{i}", True, (220, 230, 255)), (p[0] + 8, p[1] - 6))
+        draw_waypoint_marker(grid_to_pixel(wp), f"WP{i}")
 
 
 def draw_grid_drone():
@@ -2282,9 +2377,27 @@ def draw_grid_setup_markers():
     pygame.draw.circle(screen, GOAL_COLOR, grid_to_pixel(goal_cell), 10)
     pygame.draw.circle(screen, (255, 255, 255), grid_to_pixel(goal_cell), 11, 1)
     for i, wp in enumerate(waypoints, start=1):
-        p = grid_to_pixel(wp)
-        pygame.draw.circle(screen, (130, 190, 255), p, 8)
-        screen.blit(font_micro.render(f"WP{i}", True, (230, 235, 255)), (p[0] + 10, p[1] - 6))
+        draw_waypoint_marker(grid_to_pixel(wp), f"WP{i}")
+
+
+def draw_waypoint_marker(p, label, radius=8):
+    """High-contrast waypoint: magenta dot with white ring + dark outline,
+    and a label on a dark plate so it is readable on the dark grid AND the light OSM map."""
+    pygame.draw.circle(screen, WAYPOINT_OUTLINE, p, radius + 4)
+    pygame.draw.circle(screen, WAYPOINT_RING, p, radius + 2)
+    pygame.draw.circle(screen, WAYPOINT_COLOR, p, radius)
+    pygame.draw.circle(screen, WAYPOINT_OUTLINE, p, 2)
+    txt = font_small.render(label, True, (255, 255, 255))
+    box = pygame.Rect(p[0] + radius + 7, p[1] - (txt.get_height() + 6) // 2,
+                      txt.get_width() + 10, txt.get_height() + 6)
+    if box.right > GRID_WIDTH - 4:
+        box.right = p[0] - radius - 7
+    box.y = max(2, min(GRID_HEIGHT - box.h - 2, box.y))
+    plate = pygame.Surface(box.size, pygame.SRCALPHA)
+    plate.fill((20, 4, 16, 235))
+    screen.blit(plate, box.topleft)
+    pygame.draw.rect(screen, WAYPOINT_COLOR, box, 2)
+    screen.blit(txt, (box.x + 5, box.y + 3))
 
 
 def draw_wind_indicator():
@@ -2350,10 +2463,7 @@ def draw_real_map():
     pygame.draw.circle(screen, GOAL_COLOR, goal_screen, 10)
     pygame.draw.circle(screen, (255, 255, 255), goal_screen, 11, 1)
     for i, wp in enumerate(map_waypoints, start=1):
-        p = map_latlon_to_screen(*wp["latlon"])
-        pygame.draw.circle(screen, (130, 190, 255), p, 8)
-        pygame.draw.circle(screen, (255, 255, 255), p, 9, 1)
-        screen.blit(font_micro.render(f"WP{i}", True, (230, 235, 255)), (p[0] + 10, p[1] - 6))
+        draw_waypoint_marker(map_latlon_to_screen(*wp["latlon"]), f"WP{i}")
 
     if sim_state == "RUNNING" and map_path:
         if map_current_segment >= len(map_path) - 1:
@@ -2392,7 +2502,7 @@ def draw_real_map():
 
 def draw_legend(is_map=False):
     items = [(START_COLOR, "Start"), (GOAL_COLOR, "Goal"),
-             (DRONE_COLOR, "Drone"), ((130, 190, 255), "Waypoint"),
+             (DRONE_COLOR, "Drone"), (WAYPOINT_COLOR, "Waypoint"),
              (OBSTACLE_FULL_COLOR, "Solid obstacle"),
              (ASH_MODERATE[:3], "Volcanic ash"),
              (TURB_LOW[:3], "Low turbulence (pass-through)"),
@@ -2425,7 +2535,8 @@ def draw_dashboard(is_map=False):
         replans = map_replan_count
         replan_ms = map_last_replan_ms
         complete = map_mission_complete
-        status = "MISSION COMPLETE" if complete else ("HAZARD DETECTED" if map_hazard_ahead else "CLEAR")
+        status = ("MISSION ABORTED" if map_aborted else "RETURNING TO START" if map_returning
+                  else "MISSION COMPLETE" if complete else ("HAZARD DETECTED" if map_hazard_ahead else "CLEAR"))
     else:
         elapsed = mission_elapsed(grid_mission_start_ticks, grid_mission_end_ticks, grid_mission_complete)
         cost = path_cost_grid(grid_path)
@@ -2434,7 +2545,8 @@ def draw_dashboard(is_map=False):
         replans = grid_replan_count
         replan_ms = grid_last_replan_ms
         complete = grid_mission_complete
-        status = "MISSION COMPLETE" if complete else ("HAZARD DETECTED" if grid_hazard_ahead else "CLEAR")
+        status = ("MISSION ABORTED" if grid_aborted else "RETURNING TO START" if grid_returning
+                  else "MISSION COMPLETE" if complete else ("HAZARD DETECTED" if grid_hazard_ahead else "CLEAR"))
 
     cols = [
         [("MISSION TIME", f"{elapsed:.1f} s"), ("PATH COST", f"{cost:.1f}"), ("ALTITUDE CHANGES", str(alt_changes))],
@@ -2447,7 +2559,10 @@ def draw_dashboard(is_map=False):
             screen.blit(font_micro.render(label, True, DASHBOARD_LABEL_COLOR), (x, y))
             value_color = DASHBOARD_VALUE_COLOR
             if label == "ROUTE STATUS":
-                value_color = SAFE_COLOR if complete else (WARNING_COLOR if "HAZARD" in value else DASHBOARD_VALUE_COLOR)
+                if "ABORT" in value or "RETURN" in value or "HAZARD" in value:
+                    value_color = WARNING_COLOR
+                elif complete:
+                    value_color = SAFE_COLOR
             screen.blit(font_small.render(value, True, value_color), (x, y + 14))
             y += 31
     screen.blit(font_micro.render("A* is invoked only after live hazard detection. Energy/cost are illustrative.", True, UI_MUTED), (16, HEIGHT - 17))
@@ -2500,6 +2615,22 @@ def draw_report(is_map=False):
     screen.blit(font_micro.render("P to close", True, (165, 165, 180)), (card.centerx - 24, card.bottom - 20))
 
 
+def draw_return_status(is_map=False):
+    """Persistent label while the drone is returning (or has returned) after 'no possible path'."""
+    aborted = map_aborted if is_map else grid_aborted
+    returning = map_returning if is_map else grid_returning
+    if not (aborted or returning):
+        return
+    text = "NO POSSIBLE PATH — RETURNING TO START" if returning else "NO POSSIBLE PATH — MISSION ABORTED"
+    txt = font_small.render(text, True, (255, 130, 110))
+    box = pygame.Rect(12, 12 if is_map else 72, txt.get_width() + 20, txt.get_height() + 12)
+    bg = pygame.Surface(box.size, pygame.SRCALPHA)
+    bg.fill((12, 6, 6, 225))
+    screen.blit(bg, box.topleft)
+    pygame.draw.rect(screen, WARNING_COLOR, box, 2)
+    screen.blit(txt, (box.x + 10, box.y + 6))
+
+
 def draw_banner_and_common_text(is_map=False):
     # Map Mode owns the full left canvas for geographic imagery. Do not paint
     # the global application heading/status over the map. Map setup/running
@@ -2507,6 +2638,7 @@ def draw_banner_and_common_text(is_map=False):
     # intentionally retained for dramatic real-time hazard notifications.
     if is_map:
         draw_event_banner()
+        draw_return_status(True)
         return
 
     title = "Adaptive Flight-Path Replanner"
@@ -2516,6 +2648,7 @@ def draw_banner_and_common_text(is_map=False):
     status = grid_setup_message if sim_state == "SETUP" else "LIVE SENSOR: scanning ahead"
     screen.blit(font_tiny.render(status[:100], True, UI_MUTED), (12, 56))
     draw_event_banner()
+    draw_return_status(False)
 
 
 dashboard_rect = pygame.Rect(0, GRID_HEIGHT, WIDTH, DASHBOARD_HEIGHT)
