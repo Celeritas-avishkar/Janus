@@ -1,0 +1,76 @@
+<div class="jn" id="janus-live">
+  <div class="jn-chain">
+    <div class="jn-proc" data-proc="0"><span class="led"></span><div><b>GROUND STATION</b><small class="pinfo">starting</small></div></div>
+    <div class="jn-wire" data-wire="up"><span class="wlab">uplink</span><i></i><span class="wstate">-</span></div>
+    <div class="jn-proc" data-proc="1"><span class="led"></span><div><b>AIR RELAY</b><small class="pinfo">starting</small></div></div>
+    <div class="jn-wire" data-wire="dn"><span class="wlab">downlink</span><i></i><span class="wstate">-</span></div>
+    <div class="jn-proc" data-proc="2"><span class="led"></span><div><b>DRONE AGENT</b><small class="pinfo">starting</small></div></div>
+    <div class="jn-clock"><span class="phase">SETUP</span><span class="t">T+0.0</span></div>
+  </div>
+
+  <div class="jn-caption">
+    <div class="cap-main">Choose a drone and a story, then press Generate.</div>
+    <div class="cap-sub"></div>
+    <button class="jn-btn tour" data-cmd="tour">▶ Play hands-free tour</button>
+  </div>
+
+  <div class="jn-panes">
+    <section class="jn-pane" data-pane="gcs">
+      <header>
+        <div><h3>Ground station</h3><p>Drawn only from packets that crossed the radio link</p></div>
+        <span class="badge link-gcs">NO LINK</span>
+      </header>
+      <canvas class="map" data-map="gcs"></canvas>
+      <div class="readout gcs-read"></div>
+    </section>
+    <section class="jn-pane" data-pane="drone">
+      <header>
+        <div><h3>Drone onboard</h3><p>The drone's own computer · simulation observer channel, not radio</p></div>
+        <span class="badge state-drone">IDLE</span>
+      </header>
+      <canvas class="map" data-map="drone"></canvas>
+      <div class="readout drone-read"></div>
+    </section>
+  </div>
+
+  <div class="jn-strip">
+    <div class="strip-head">
+      <h4>Packet seismograph</h4>
+      <div class="strip-legend">
+        <span><i class="k ok"></i>delivered</span><span><i class="k rel"></i>reliable (mission, picture, route)</span>
+        <span><i class="k lost"></i>lost in the air</span><span><i class="k drop"></i>dropped (loss slider)</span>
+        <span><i class="k cor"></i>corrupted (CRC caught)</span><span><i class="k blk"></i>link cut</span>
+      </div>
+    </div>
+    <canvas class="seis"></canvas>
+  </div>
+
+  <div class="jn-bottom">
+    <div class="jn-controls">
+      <div class="grp">
+        <h5>Mission</h5>
+        <button class="jn-btn primary" data-cmd="launch">Launch mission</button>
+        <button class="jn-btn" data-cmd="rtl">Return to launch</button>
+        <button class="jn-btn" data-cmd="resume">Resume</button>
+      </div>
+      <div class="grp">
+        <h5>Inject</h5>
+        <button class="jn-btn" data-cmd="popup">Pop-up hazard ahead</button>
+        <button class="jn-btn" data-cmd="unsafe">Unsafe route upload</button>
+        <button class="jn-btn" data-cmd="feed">Pause weather feed</button>
+      </div>
+      <div class="grp">
+        <h5>Air link</h5>
+        <button class="jn-btn danger" data-cmd="cut">Cut link</button>
+        <button class="jn-btn danger" data-cmd="antenna">Pull antenna (kill relay)</button>
+        <label class="sl"><span>Uplink loss <b data-v="loss_up">0%</b></span><input type="range" min="0" max="0.9" step="0.05" data-imp="loss_up"></label>
+        <label class="sl"><span>Downlink loss <b data-v="loss_dn">0%</b></span><input type="range" min="0" max="0.9" step="0.05" data-imp="loss_dn"></label>
+        <label class="sl"><span>Latency <b data-v="latency_ms">20 ms</b></span><input type="range" min="0" max="1500" step="10" data-imp="latency_ms"></label>
+        <label class="sl"><span>Corruption <b data-v="corrupt">0%</b></span><input type="range" min="0" max="0.5" step="0.02" data-imp="corrupt"></label>
+      </div>
+    </div>
+    <div class="jn-log"><h5>Event log <small>GCS = ground station · DRN = drone</small></h5><ol class="log"></ol></div>
+    <div class="jn-stats"><h5>Link statistics</h5><div class="stats"></div></div>
+  </div>
+  <div class="jn-toast" hidden></div>
+</div>
