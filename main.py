@@ -43,6 +43,13 @@ TURBULENCE_LEVELS = ["LOW", "MODERATE", "HIGH"]
 TURBULENCE_COST = {"LOW": 2, "MODERATE": 8, "HIGH": 28}
 ASH_COST = {1: 8, 2: 16, 3: 26}
 
+# Moving hazard zones: direction + speed are set per zone in the setup panel.
+HAZARD_DIRS = [("STATIC", 0, 0), ("N", 0, -1), ("NE", 1, -1), ("E", 1, 0), ("SE", 1, 1),
+               ("S", 0, 1), ("SW", -1, 1), ("W", -1, 0), ("NW", -1, -1)]
+HAZARD_SPEED_VALUES = [0.3, 0.6, 1.0, 1.5]   # cells / second
+HAZARD_PREVIEW_S = 3.0                       # ghost outline shows where a zone will be in N seconds
+hazard_clock = 0.0                           # seconds of zone motion since launch
+
 # ============================================================
 # DISPLAY
 # ============================================================
@@ -132,6 +139,7 @@ WAYPOINT_COLOR = (255, 64, 200)
 WAYPOINT_LIGHT = (255, 160, 228)
 WAYPOINT_RING = (255, 255, 255)
 WAYPOINT_OUTLINE = (24, 0, 18)
+ARROW_COLOR = (255, 235, 120)   # moving-zone arrow / predicted-position outline
 
 DASHBOARD_BG_COLOR = (8, 13, 9)
 DASHBOARD_LABEL_COLOR = (119, 143, 113)
@@ -304,6 +312,196 @@ def hazard_label(h):
     return f"TURBULENCE {h.get('severity', 'MODERATE')}"
 
 
+# ============================================================
+# MOVING HAZARD ZONES
+# ============================================================
+# A zone's position is a pure function of the mission clock:
+#     position(T) = fold(home + velocity * T)      (bounces off the map edges)
+# so the sensor and A* can ask "where will this zone be in t seconds?" and the
+# drone can course-correct BEFORE the zone reaches its route.
+
+
+def hazard_is_moving(h):
+    return int(h.get("dir", 0)) > 0
+
+
+def hazard_velocity(h):
+    d = int(h.get("dir", 0))
+    if d <= 0 or d >= len(HAZARD_DIRS):
+        return 0.0, 0.0
+    _, dx, dy = HAZARD_DIRS[d]
+    spd = HAZARD_SPEED_VALUES[int(h.get("spd", 1)) % len(HAZARD_SPEED_VALUES)]
+    n = math.hypot(dx, dy)
+    return dx / n * spd, dy / n * spd
+
+
+def hazard_dir_name(h):
+    d = int(h.get("dir", 0))
+    return HAZARD_DIRS[d][0] if 0 <= d < len(HAZARD_DIRS) else "STATIC"
+
+
+def hazard_speed_value(h):
+    return HAZARD_SPEED_VALUES[int(h.get("spd", 1)) % len(HAZARD_SPEED_VALUES)]
+
+
+def hazard_move_suffix(h):
+    if not hazard_is_moving(h):
+        return ""
+    return f"  >{hazard_dir_name(h)} {hazard_speed_value(h):.1f}"
+
+
+def _fold(p, lo, hi):
+    """Reflect an unbounded coordinate back into [lo, hi] (triangle wave)."""
+    if hi <= lo:
+        return lo
+    span = hi - lo
+    m = (p - lo) % (2.0 * span)
+    return lo + (m if m <= span else 2.0 * span - m)
+
+
+def hazard_z_range(h):
+    z_min = int(h.get("z_min", 0))
+    z_max = int(h.get("z_max", GRID_LAYERS - 1))
+    if h.get("type") == "ash" and z_max >= GRID_LAYERS - 1:
+        return 0, GRID_LAYERS - 1
+    return z_min, z_max
+
+
+def grid_hazard_pos_at(h, T):
+    hc = float(h.get("home_col", h["col_start"]))
+    hr = float(h.get("home_row", h["row_start"]))
+    vx, vy = hazard_velocity(h)
+    if vx == 0.0 and vy == 0.0:
+        return hc, hr
+    return (_fold(hc + vx * T, min(0.0, hc), max(GRID_COLS - h["width"], hc)),
+            _fold(hr + vy * T, min(0.0, hr), max(GRID_ROWS - h["height"], hr)))
+
+
+def grid_hazard_bounds_at(h, T):
+    x, y = grid_hazard_pos_at(h, T)
+    c, r = int(math.floor(x + 0.5)), int(math.floor(y + 0.5))
+    return (c, c + h["width"] - 1, r, r + h["height"] - 1)
+
+
+def map_hazard_motion_state(h):
+    """(x0, y0, w, h) of a map zone in fractional map-grid cells."""
+    if "hx0" in h:
+        return h["hx0"], h["hy0"], h["hw"], h["hh"]
+    cw, ch = MAP_WIDTH / MAP_COLS, MAP_HEIGHT / MAP_ROWS
+    xs, ys = [], []
+    for lat, lon in ((h["lat1"], h["lon1"]), (h["lat2"], h["lon2"])):
+        wx, wy = latlon_to_world(lat, lon, map_zoom_actual)
+        xs.append((wx - map_origin_world[0]) / cw)
+        ys.append((wy - map_origin_world[1]) / ch)
+    return min(xs), min(ys), max(xs) - min(xs), max(ys) - min(ys)
+
+
+def map_hazard_pos_at(h, T):
+    hx, hy, hw, hh = map_hazard_motion_state(h)
+    vx, vy = hazard_velocity(h)
+    if vx == 0.0 and vy == 0.0:
+        return hx, hy
+    return (_fold(hx + vx * T, min(0.0, hx), max(MAP_COLS - hw, hx)),
+            _fold(hy + vy * T, min(0.0, hy), max(MAP_ROWS - hh, hy)))
+
+
+def map_hazard_bounds_at(h, T):
+    if not hazard_is_moving(h):
+        return map_hazard_bounds_grid(h)
+    _hx, _hy, hw, hh = map_hazard_motion_state(h)
+    x, y = map_hazard_pos_at(h, T)
+    return (max(0, min(MAP_COLS - 1, int(math.floor(x)))),
+            max(0, min(MAP_COLS - 1, int(math.floor(x + hw)))),
+            max(0, min(MAP_ROWS - 1, int(math.floor(y)))),
+            max(0, min(MAP_ROWS - 1, int(math.floor(y + hh)))))
+
+
+def hazard_bounds_at(h, T):
+    return grid_hazard_bounds_at(h, T) if "col_start" in h else map_hazard_bounds_at(h, T)
+
+
+def apply_hazard_positions(is_map):
+    """Write each moving zone's CURRENT position (at hazard_clock) into the zone."""
+    if is_map:
+        for h in map_hazards:
+            if hazard_is_moving(h):
+                x, y = map_hazard_pos_at(h, hazard_clock)
+                h["cx0"], h["cy0"] = x, y
+                h["cb"] = map_hazard_bounds_at(h, hazard_clock)
+    else:
+        for h in hazards:
+            if hazard_is_moving(h):
+                x, y = grid_hazard_pos_at(h, hazard_clock)
+                h["col_start"], h["row_start"] = int(math.floor(x + 0.5)), int(math.floor(y + 0.5))
+
+
+def advance_hazards(dt, is_map):
+    global hazard_clock
+    hazard_clock += dt
+    apply_hazard_positions(is_map)
+
+
+def reset_hazard_motion():
+    """Put every zone back at its launch position and zero the motion clock."""
+    global hazard_clock
+    hazard_clock = 0.0
+    for h in hazards:
+        if "home_col" in h:
+            h["col_start"], h["row_start"] = h["home_col"], h["home_row"]
+    for h in map_hazards:
+        for k in ("cb", "cx0", "cy0", "hx0", "hy0", "hw", "hh"):
+            h.pop(k, None)
+
+
+def init_map_hazard_motion():
+    """Called at launch: freeze map-zone geometry in map-grid cells so motion is exact."""
+    for h in map_hazards:
+        for k in ("cb", "cx0", "cy0", "hx0", "hy0", "hw", "hh"):
+            h.pop(k, None)
+        if hazard_is_moving(h):
+            hx, hy, hw, hh = map_hazard_motion_state(h)
+            h["hx0"], h["hy0"], h["hw"], h["hh"] = hx, hy, hw, hh
+    apply_hazard_positions(True)
+
+
+def make_hazard_probe(hazard_list, pad=0.0):
+    """Return probe(cell, dt) -> the avoidance zone that will occupy `cell`
+    `dt` seconds from now (None if clear). Moving zones are swept over the time the
+    drone occupies the cell (+/- 0.75 of a step) so the answer is conservative."""
+    window = 0.75 / DRONE_SPEED_VALUES[DRONE_SPEED_INDEX] + pad
+    T0 = hazard_clock
+    items = []
+    for h in hazard_list:
+        if not hazard_requires_replan(h):
+            continue
+        z0, z1 = hazard_z_range(h)
+        if hazard_is_moving(h):
+            items.append((h, z0, z1, True, None))
+        else:
+            items.append((h, z0, z1, False, hazard_bounds_at(h, T0)))
+    cache = {}
+
+    def probe(cell, dt):
+        x, y, z = cell
+        tq = int(max(0.0, dt) * 10.0)
+        for i, (h, z0, z1, moving, b) in enumerate(items):
+            if z < z0 or z > z1:
+                continue
+            if moving:
+                b = cache.get((i, tq))
+                if b is None:
+                    t_lo = max(T0, T0 + tq * 0.1 - window)
+                    t_hi = T0 + (tq + 1) * 0.1 + window
+                    b0, b1 = hazard_bounds_at(h, t_lo), hazard_bounds_at(h, t_hi)
+                    b = (min(b0[0], b1[0]), max(b0[1], b1[1]), min(b0[2], b1[2]), max(b0[3], b1[3]))
+                    cache[(i, tq)] = b
+            if b[0] <= x <= b[1] and b[2] <= y <= b[3]:
+                return h
+        return None
+
+    return probe
+
+
 def make_obstacle(obstacle_id, col_start, width, row_start, height, z_min, z_max):
     return {"id": obstacle_id, "col_start": col_start, "width": width,
             "row_start": row_start, "height": height,
@@ -324,6 +522,8 @@ def make_hazard(hazard_id, htype, col_start, width, row_start, height,
         "id": hazard_id, "type": htype, "col_start": col_start, "width": width,
         "row_start": row_start, "height": height,
         "z_min": z_min, "z_max": z_max, "severity": severity,
+        "home_col": col_start, "home_row": row_start,   # launch position (zones may drift)
+        "dir": 0, "spd": 1,                              # movement direction idx / speed idx
     }
 
 
@@ -491,21 +691,35 @@ def reconstruct_path(came_from, current):
 
 
 def grid_astar(start, goal):
+    """A* that knows where moving zones WILL be when the drone gets to each cell."""
     if in_any_obstacle_grid(goal):
         return None
+    v = DRONE_SPEED_VALUES[DRONE_SPEED_INDEX]
+    probe = make_hazard_probe(hazards, pad=0.2)
+
+    def free_at(c, t):
+        return (not in_any_obstacle_grid(c)) and probe(c, t) is None
+
     open_set = [(grid_heuristic(start, goal), 0, start)]
     came_from = {}
     g_score = {start: 0}
+    t_at = {start: 0.0}
     counter = 1
     while open_set:
         _, _, current = heapq.heappop(open_set)
         if current == goal:
             return reconstruct_path(came_from, current)
-        for neighbor in grid_neighbors(current, goal):
+        t_cur = t_at[current]
+        t_next = t_cur + 1.0 / v
+        for neighbor in neighbor_moves(current, GRID_COLS, GRID_ROWS, lambda c: free_at(c, t_next)):
+            t_n = t_cur + step_length(current, neighbor) / v
+            if probe(neighbor, t_n) is not None:
+                continue
             tentative = g_score[current] + grid_move_cost(current, neighbor)
             if tentative < g_score.get(neighbor, float("inf")):
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative
+                t_at[neighbor] = t_n
                 f = tentative + grid_heuristic(neighbor, goal)
                 heapq.heappush(open_set, (f, counter, neighbor))
                 counter += 1
@@ -699,7 +913,7 @@ def make_map_hazard(hazard_id, htype, lat1, lon1, lat2, lon2,
         z_min, z_max = 0, GRID_LAYERS - 1
     return {"id": hazard_id, "type": htype, "lat1": lat1, "lon1": lon1,
             "lat2": lat2, "lon2": lon2, "z_min": z_min, "z_max": z_max,
-            "severity": severity}
+            "severity": severity, "dir": 0, "spd": 1}
 
 
 def map_zone_bounds(z):
@@ -708,6 +922,8 @@ def map_zone_bounds(z):
 
 
 def map_zone_grid_bounds(z):
+    if "cb" in z:          # moving zone: live cell bounds
+        return z["cb"]
     lat_min, lat_max, lon_min, lon_max = map_zone_bounds(z)
     a = map_coord_from_latlon((lat_min, lon_min), 0)
     b = map_coord_from_latlon((lat_max, lon_max), 0)
@@ -768,19 +984,14 @@ def map_astar(start, goal):
         return None
     obstacle_bounds = [(map_obstacle_bounds_grid(o), o["z_min"], o["z_max"]) for o in map_obstacles]
     hazard_bounds = [(map_hazard_bounds_grid(h), h) for h in map_hazards]
+    v = DRONE_SPEED_VALUES[DRONE_SPEED_INDEX]
+    probe = make_hazard_probe(map_hazards, pad=0.2)
 
-    def blocked(cell):
-        return any(cell_inside_bounds(cell, b, z0, z1) for b, z0, z1 in obstacle_bounds)
-
-    def hazard_blocked(cell):
-        # Avoidance hazards are hard constraints. Never permit a goal-cell
-        # exception here: a goal inside ash/high turbulence is not a valid safe
-        # endpoint, and the drone must route around the exclusion volume.
-        return any(hazard_blocks_cell(cell, h) for h in map_hazards)
-
-    def neighbors(cell):
-        return neighbor_moves(cell, MAP_COLS, MAP_ROWS,
-                              lambda c: not blocked(c) and not hazard_blocked(c))
+    def free_at(c, t):
+        # Avoidance hazards are hard constraints, evaluated where moving zones
+        # will be at the time the drone arrives.
+        return (not any(cell_inside_bounds(c, b, z0, z1) for b, z0, z1 in obstacle_bounds)
+                and probe(c, t) is None)
 
     def cost(a, b):
         wind = 0
@@ -800,16 +1011,23 @@ def map_astar(start, goal):
     open_set = [(heuristic(start, goal), 0, start)]
     came_from = {}
     g_score = {start: 0}
+    t_at = {start: 0.0}
     counter = 1
     while open_set:
         _, _, current = heapq.heappop(open_set)
         if current == goal:
             return reconstruct_path(came_from, current)
-        for neighbor in neighbors(current):
+        t_cur = t_at[current]
+        t_next = t_cur + 1.0 / v
+        for neighbor in neighbor_moves(current, MAP_COLS, MAP_ROWS, lambda c: free_at(c, t_next)):
+            t_n = t_cur + step_length(current, neighbor) / v
+            if probe(neighbor, t_n) is not None:
+                continue
             tentative = g_score[current] + cost(current, neighbor)
             if tentative < g_score.get(neighbor, float("inf")):
                 came_from[neighbor] = current
                 g_score[neighbor] = tentative
+                t_at[neighbor] = t_n
                 heapq.heappush(open_set, (tentative + heuristic(neighbor, goal), counter, neighbor))
                 counter += 1
     return None
@@ -1037,21 +1255,29 @@ def map_target_advance():
 
 
 def grid_scan_threats():
+    """Look SENSOR_RANGE_CELLS ahead along the route. Avoidance zones are checked
+    where they will be when the drone reaches each cell (moving-zone prediction)."""
     if not grid_path:
         return []
     end = min(len(grid_path), grid_current_segment + 1 + SENSOR_RANGE_CELLS)
     threats = []
     seen = set()
+    probe = make_hazard_probe(hazards)
+    v = DRONE_SPEED_VALUES[DRONE_SPEED_INDEX]
+    t = 0.0
     for idx in range(grid_current_segment, end):
         cell = grid_path[idx]
+        if idx > grid_current_segment:
+            t += step_length(grid_path[idx - 1], cell) / v
         for o in obstacles:
             if in_obstacle_grid(cell, o):
                 key = ("obstacle", o["id"], idx)
                 if key not in seen:
                     seen.add(key)
                     threats.append({"kind": "obstacle", "obj": o, "index": idx})
-        for h in hazards:
-            if hazard_blocks_cell(cell, h):
+        if idx > grid_current_segment:
+            h = probe(cell, t)
+            if h is not None:
                 key = ("hazard", h["id"], idx)
                 if key not in seen:
                     seen.add(key)
@@ -1066,17 +1292,22 @@ def map_scan_threats():
     threats = []
     seen = set()
     obs_bounds = [(map_obstacle_bounds_grid(o), o) for o in map_obstacles]
-    haz_bounds = [(map_hazard_bounds_grid(h), h) for h in map_hazards]
+    probe = make_hazard_probe(map_hazards)
+    v = DRONE_SPEED_VALUES[DRONE_SPEED_INDEX]
+    t = 0.0
     for idx in range(map_current_segment, end):
         cell = map_path[idx]
+        if idx > map_current_segment:
+            t += step_length(map_path[idx - 1], cell) / v
         for bnd, o in obs_bounds:
             if cell_inside_bounds(cell, bnd, o["z_min"], o["z_max"]):
                 key = ("obstacle", o["id"], idx)
                 if key not in seen:
                     seen.add(key)
                     threats.append({"kind": "obstacle", "obj": o, "index": idx})
-        for bnd, h in haz_bounds:
-            if hazard_blocks_cell(cell, h):
+        if idx > map_current_segment:
+            h = probe(cell, t)
+            if h is not None:
                 key = ("hazard", h["id"], idx)
                 if key not in seen:
                     seen.add(key)
@@ -1165,15 +1396,24 @@ def set_alert_phase(key, phase, hold=3.0):
         a["until"] = time.perf_counter() + hold
 
 
+def map_zone_screen_rect(z):
+    """Screen rect of a map zone; moving zones use their live fractional position."""
+    if "cx0" in z:
+        cw, ch = MAP_WIDTH / MAP_COLS, MAP_HEIGHT / MAP_ROWS
+        return pygame.Rect(int(z["cx0"] * cw), int(z["cy0"] * ch),
+                           max(3, int(z["hw"] * cw)), max(3, int(z["hh"] * ch)))
+    p1 = map_latlon_to_screen(z["lat1"], z["lon1"])
+    p2 = map_latlon_to_screen(z["lat2"], z["lon2"])
+    x1, x2 = sorted((p1[0], p2[0]))
+    y1, y2 = sorted((p1[1], p2[1]))
+    return pygame.Rect(x1, y1, max(3, x2 - x1), max(3, y2 - y1))
+
+
 def _alert_rect(key, o):
     if key == "grid":
         return pygame.Rect(o["col_start"] * CELL_SIZE, o["row_start"] * CELL_SIZE,
                            o["width"] * CELL_SIZE, o["height"] * CELL_SIZE)
-    p1 = map_latlon_to_screen(o["lat1"], o["lon1"])
-    p2 = map_latlon_to_screen(o["lat2"], o["lon2"])
-    x1, x2 = sorted((p1[0], p2[0]))
-    y1, y2 = sorted((p1[1], p2[1]))
-    return pygame.Rect(x1, y1, max(3, x2 - x1), max(3, y2 - y1))
+    return map_zone_screen_rect(o)
 
 
 def _alert_state(key):
@@ -1336,12 +1576,14 @@ def grid_clear_return_state():
     global grid_returning, grid_aborted
     grid_returning = False
     grid_aborted = False
+    reset_hazard_motion()      # zones return to launch positions, motion clock -> 0
 
 
 def map_clear_return_state():
     global map_returning, map_aborted
     map_returning = False
     map_aborted = False
+    reset_hazard_motion()
 
 
 def grid_begin_return_to_start():
@@ -1476,6 +1718,8 @@ def grid_update_mission(dt):
     if grid_mission_complete or not grid_path:
         return
 
+    advance_hazards(dt, False)   # moving zones drift every frame, even while the drone is holding
+
     if grid_old_path_timer > 0:
         grid_old_path_timer = max(0.0, grid_old_path_timer - dt)
 
@@ -1503,11 +1747,13 @@ def grid_update_mission(dt):
                              if hazards_at_grid(grid_path[i])]
         grid_hazard_ahead = bool(grid_hazard_cells or threats)
         if threats:
-            threat = threats[0]
-            signature = grid_threat_signature(threat)
-            if signature != grid_threat_lock:
-                grid_start_replan_sequence(threat)
-                return
+            # A moving zone can re-enter the route at any time, so it always re-triggers
+            # a replan (the one-shot lock only suppresses repeats for static zones).
+            for threat in threats:
+                moving = threat["kind"] == "hazard" and hazard_is_moving(threat["obj"])
+                if moving or grid_threat_signature(threat) != grid_threat_lock:
+                    grid_start_replan_sequence(threat)
+                    return
         else:
             lows = scan_noncritical_grid()
             if lows:
@@ -1539,6 +1785,8 @@ def map_update_mission(dt):
     if map_mission_complete or not map_path:
         return
 
+    advance_hazards(dt, True)
+
     if map_old_path_timer > 0:
         map_old_path_timer = max(0.0, map_old_path_timer - dt)
 
@@ -1563,11 +1811,11 @@ def map_update_mission(dt):
         map_hazard_cells = [map_path[i] for i in range(map_current_segment, end) if hazards_at_map(map_path[i])]
         map_hazard_ahead = bool(map_hazard_cells or threats)
         if threats:
-            threat = threats[0]
-            signature = map_threat_signature(threat)
-            if signature != map_threat_lock:
-                map_start_replan_sequence(threat)
-                return
+            for threat in threats:
+                moving = threat["kind"] == "hazard" and hazard_is_moving(threat["obj"])
+                if moving or map_threat_signature(threat) != map_threat_lock:
+                    map_start_replan_sequence(threat)
+                    return
         else:
             lows = scan_noncritical_map()
             if lows:
@@ -1815,6 +2063,8 @@ def add_random_grid_scenario():
                 z_lo, z_hi = random_altitude_band()
                 severity = random.randint(1, 3) if htype == "ash" else random.choice(TURBULENCE_LEVELS)
                 hz = make_hazard(next_hazard_id, htype, cs, w, rs, h, z_lo, z_hi, severity)
+                if random.random() < 0.5:
+                    hz["dir"], hz["spd"] = random.randint(1, 8), random.randint(0, 2)
                 hazards.append(hz)
                 next_hazard_id += 1
                 break
@@ -1887,6 +2137,8 @@ def add_random_map_scenario():
                 z_lo, z_hi = random_altitude_band()
                 severity = random.randint(1, 3) if htype == "ash" else random.choice(TURBULENCE_LEVELS)
                 hz = make_map_hazard(next_map_hazard_id, htype, ll1[0], ll1[1], ll2[0], ll2[1], z_lo, z_hi, severity)
+                if random.random() < 0.5:
+                    hz["dir"], hz["spd"] = random.randint(1, 8), random.randint(0, 2)
                 map_hazards.append(hz)
                 next_map_hazard_id += 1
                 break
@@ -2040,6 +2292,7 @@ def start_map_simulation():
     map_show_report = False
     ALERT["map"] = None
     map_clear_return_state()
+    init_map_hazard_motion()
     map_mission_start_ticks = pygame.time.get_ticks()
     map_mission_end_ticks = map_mission_start_ticks
     map_status = "LIVE GEO SENSOR ENABLED — adaptive route replanning active."
@@ -2302,6 +2555,49 @@ def draw_grid():
         pygame.draw.line(screen, GRID_COLOR, (0, y), (GRID_WIDTH, y))
 
 
+def draw_motion_arrow(rect, h):
+    """Arrow showing which way (and, via its length, that) a zone is drifting."""
+    vx, vy = hazard_velocity(h)
+    n = math.hypot(vx, vy)
+    if n == 0:
+        return
+    ux, uy = vx / n, vy / n
+    cx, cy = rect.center
+    length = max(20, min(rect.w, rect.h) * 0.5 + 10)
+    tip = (cx + ux * length, cy + uy * length)
+    tail = (cx - ux * length * 0.25, cy - uy * length * 0.25)
+    px, py = -uy, ux
+    head = [tip, (tip[0] - ux * 11 + px * 6, tip[1] - uy * 11 + py * 6),
+            (tip[0] - ux * 11 - px * 6, tip[1] - uy * 11 - py * 6)]
+    pygame.draw.line(screen, (12, 12, 10), tail, tip, 6)
+    pygame.draw.polygon(screen, (12, 12, 10), [(tip[0] + ux * 2, tip[1] + uy * 2),
+                                               (head[1][0] - px, head[1][1] - py),
+                                               (head[2][0] + px, head[2][1] + py)])
+    pygame.draw.line(screen, ARROW_COLOR, tail, tip, 3)
+    pygame.draw.polygon(screen, ARROW_COLOR, head)
+
+
+def draw_hazard_ghost_rect(rect):
+    """Dashed outline of where a moving zone will be HAZARD_PREVIEW_S seconds from now."""
+    pts = [rect.topleft, rect.topright, rect.bottomright, rect.bottomleft, rect.topleft]
+    draw_dashed_line(screen, pts, ARROW_COLOR, 1, dash=6, gap=5)
+
+
+def grid_ghost_rect(h):
+    c0, c1, r0, r1 = grid_hazard_bounds_at(h, hazard_clock + HAZARD_PREVIEW_S)
+    return pygame.Rect(c0 * CELL_SIZE, r0 * CELL_SIZE, (c1 - c0 + 1) * CELL_SIZE, (r1 - r0 + 1) * CELL_SIZE)
+
+
+def map_ghost_rect(h):
+    if map_surface is None:
+        return None
+    _hx, _hy, hw, hh = map_hazard_motion_state(h)
+    x, y = map_hazard_pos_at(h, hazard_clock + HAZARD_PREVIEW_S)
+    cw, ch = MAP_WIDTH / MAP_COLS, MAP_HEIGHT / MAP_ROWS
+    ox, oy = map_pan_live_offset if (map_is_panning and "cx0" not in h) else (0, 0)
+    return pygame.Rect(int(x * cw + ox), int(y * ch + oy), max(3, int(hw * cw)), max(3, int(hh * ch)))
+
+
 def draw_grid_hazards():
     for h in hazards:
         color = ash_rgba(h["severity"]) if h["type"] == "ash" else turbulence_rgba(h["severity"])
@@ -2312,9 +2608,12 @@ def draw_grid_hazards():
         screen.blit(surf, (0, 0))
         border = WARNING_COLOR if hazard_requires_replan(h) else SAFE_COLOR
         pygame.draw.rect(screen, border, rect, 1)
-        label = font_micro.render(hazard_label(h), True, TEXT_MAIN)
+        label = font_micro.render(hazard_label(h) + hazard_move_suffix(h), True, TEXT_MAIN)
         if rect.width > 45:
             screen.blit(label, (rect.x + 3, rect.y + 3))
+        if hazard_is_moving(h):
+            draw_hazard_ghost_rect(grid_ghost_rect(h))
+            draw_motion_arrow(rect, h)
 
 
 def draw_grid_obstacles():
@@ -2424,17 +2723,19 @@ def draw_real_map():
         screen.blit(font_small.render("Check internet access and install requests + Pillow.", True, (180, 185, 200)), (24, 56))
 
     for h in map_hazards:
-        p1 = map_latlon_to_screen(h["lat1"], h["lon1"])
-        p2 = map_latlon_to_screen(h["lat2"], h["lon2"])
-        x1, x2 = sorted((p1[0], p2[0])); y1, y2 = sorted((p1[1], p2[1]))
-        rect = pygame.Rect(x1, y1, max(3, x2 - x1), max(3, y2 - y1))
+        rect = map_zone_screen_rect(h)
         surf = pygame.Surface(rect.size, pygame.SRCALPHA)
         surf.fill(ash_rgba(h["severity"]) if h["type"] == "ash" else turbulence_rgba(h["severity"]))
         screen.blit(surf, rect.topleft)
         border = WARNING_COLOR if hazard_requires_replan(h) else SAFE_COLOR
         pygame.draw.rect(screen, border, rect, 1)
         if rect.width > 55:
-            screen.blit(font_micro.render(hazard_label(h), True, (235, 240, 235)), (rect.x + 3, rect.y + 3))
+            screen.blit(font_micro.render(hazard_label(h) + hazard_move_suffix(h), True, (235, 240, 235)), (rect.x + 3, rect.y + 3))
+        if hazard_is_moving(h):
+            ghost = map_ghost_rect(h)
+            if ghost is not None:
+                draw_hazard_ghost_rect(ghost)
+            draw_motion_arrow(rect, h)
 
     for o in map_obstacles:
         p1 = map_latlon_to_screen(o["lat1"], o["lon1"])
@@ -2506,7 +2807,8 @@ def draw_legend(is_map=False):
              (OBSTACLE_FULL_COLOR, "Solid obstacle"),
              (ASH_MODERATE[:3], "Volcanic ash"),
              (TURB_LOW[:3], "Low turbulence (pass-through)"),
-             (TURB_HIGH[:3], "High turbulence (avoid)")]
+             (TURB_HIGH[:3], "High turbulence (avoid)"),
+             (ARROW_COLOR, "Arrow = zone drifting")]
     row_h = 18
     w = 250
     h = 10 + row_h * len(items)
@@ -2739,6 +3041,8 @@ def draw_grid_setup_panel():
     panel.blit(font_small.render("ADD HAZARDS / OBSTACLES", True, TEXT_MAIN), (x, y)); y += 22
     y = button_on_surface(panel, buttons, x, y, "+ ADD VOLCANIC ASH ZONE", "grid_add_ash", active=grid_pending_placement == "ash")
     y = button_on_surface(panel, buttons, x, y, "+ ADD TURBULENCE ZONE", "grid_add_turbulence", active=grid_pending_placement == "turbulence")
+    y = button_on_surface(panel, buttons, x, y, "+ ADD MOVING ASH ZONE", "grid_add_moving_ash", active=grid_pending_placement == "moving_ash")
+    y = button_on_surface(panel, buttons, x, y, "+ ADD MOVING TURBULENCE ZONE", "grid_add_moving_turbulence", active=grid_pending_placement == "moving_turbulence")
     y = button_on_surface(panel, buttons, x, y, "+ ADD FULL-HEIGHT OBSTACLE", "grid_add_obstacle_full", active=grid_pending_placement == "obstacle_full", color=BUTTON_OBSTACLE_COLOR if grid_pending_placement != "obstacle_full" else None)
     y = button_on_surface(panel, buttons, x, y, "+ ADD PARTIAL-ALT OBSTACLE", "grid_add_obstacle_partial", active=grid_pending_placement == "obstacle_partial", color=BUTTON_OBSTACLE_COLOR if grid_pending_placement != "obstacle_partial" else None)
     y += 2
@@ -2757,7 +3061,7 @@ def draw_grid_setup_panel():
     for h in hazards:
         row = pygame.Rect(x, y, 276, 24)
         pygame.draw.rect(panel, BUTTON_ACTIVE_COLOR if h["id"] == selected_hazard_id else BUTTON_COLOR, row)
-        panel.blit(font_micro.render(f"#{h['id']} {hazard_label(h)}", True, TEXT_MAIN), (x + 5, y + 6))
+        panel.blit(font_micro.render(f"#{h['id']} {hazard_label(h)}{hazard_move_suffix(h)}", True, TEXT_MAIN), (x + 5, y + 6))
         buttons.append((row, "grid_select_hazard", h["id"]))
         rm = pygame.Rect(x + 280, y, 26, 24); pygame.draw.rect(panel, BUTTON_DANGER_COLOR, rm)
         panel.blit(font_micro.render("X", True, TEXT_MAIN), (x + 289, y + 6))
@@ -2772,6 +3076,9 @@ def draw_grid_setup_panel():
         y = button_on_surface(panel, buttons, x, y, f"SEVERITY / EXTENT: {hazard_label(hsel).replace('ASH D', 'ASH D')}", "grid_cycle_hazard_severity")
         y = button_on_surface(panel, buttons, x, y, f"MIN ALTITUDE: {alt_ft(hsel['z_min']):,} FT", "grid_cycle_hazard_minz")
         y = button_on_surface(panel, buttons, x, y, f"MAX ALTITUDE: {alt_ft(hsel['z_max']):,} FT", "grid_cycle_hazard_maxz")
+        y = button_on_surface(panel, buttons, x, y, f"MOVEMENT DIRECTION: {hazard_dir_name(hsel)}", "grid_cycle_hazard_dir")
+        if hazard_is_moving(hsel):
+            y = button_on_surface(panel, buttons, x, y, f"ZONE SPEED: {hazard_speed_value(hsel):.1f} CELLS/S", "grid_cycle_hazard_speed")
     y += 4
     panel.blit(font_small.render(f"OBSTACLES ({len(obstacles)})", True, TEXT_MAIN), (x, y)); y += 21
     for o in obstacles:
@@ -2865,6 +3172,8 @@ def draw_map_setup_panel():
     panel.blit(font_small.render("ADD HAZARDS / OBSTACLES", True, TEXT_MAIN), (x, y)); y += 22
     y = button_on_surface(panel, buttons, x, y, "+ ADD VOLCANIC ASH ZONE", "map_add_ash", active=map_pending_placement == "ash")
     y = button_on_surface(panel, buttons, x, y, "+ ADD TURBULENCE ZONE", "map_add_turbulence", active=map_pending_placement == "turbulence")
+    y = button_on_surface(panel, buttons, x, y, "+ ADD MOVING ASH ZONE", "map_add_moving_ash", active=map_pending_placement == "moving_ash")
+    y = button_on_surface(panel, buttons, x, y, "+ ADD MOVING TURBULENCE ZONE", "map_add_moving_turbulence", active=map_pending_placement == "moving_turbulence")
     y = button_on_surface(panel, buttons, x, y, "+ ADD FULL-HEIGHT OBSTACLE", "map_add_obstacle_full", active=map_pending_placement == "obstacle_full", color=BUTTON_OBSTACLE_COLOR if map_pending_placement != "obstacle_full" else None)
     y = button_on_surface(panel, buttons, x, y, "+ ADD PARTIAL-ALT OBSTACLE", "map_add_obstacle_partial", active=map_pending_placement == "obstacle_partial", color=BUTTON_OBSTACLE_COLOR if map_pending_placement != "obstacle_partial" else None)
 
@@ -2880,7 +3189,7 @@ def draw_map_setup_panel():
     for h in map_hazards:
         row = pygame.Rect(x, y, 276, 24)
         pygame.draw.rect(panel, BUTTON_ACTIVE_COLOR if h["id"] == selected_map_hazard_id else BUTTON_COLOR, row)
-        panel.blit(font_micro.render(f"#{h['id']} {hazard_label(h)}", True, TEXT_MAIN), (x + 5, y + 6))
+        panel.blit(font_micro.render(f"#{h['id']} {hazard_label(h)}{hazard_move_suffix(h)}", True, TEXT_MAIN), (x + 5, y + 6))
         buttons.append((row, "map_select_hazard", h["id"]))
         rm = pygame.Rect(x + 280, y, 26, 24); pygame.draw.rect(panel, BUTTON_DANGER_COLOR, rm)
         panel.blit(font_micro.render("X", True, TEXT_MAIN), (x + 289, y + 6))
@@ -2895,6 +3204,9 @@ def draw_map_setup_panel():
         y = button_on_surface(panel, buttons, x, y, f"SEVERITY / EXTENT: {hazard_label(hsel)}", "map_cycle_hazard_severity")
         y = button_on_surface(panel, buttons, x, y, f"MIN ALTITUDE: {alt_ft(hsel['z_min']):,} FT", "map_cycle_hazard_minz")
         y = button_on_surface(panel, buttons, x, y, f"MAX ALTITUDE: {alt_ft(hsel['z_max']):,} FT", "map_cycle_hazard_maxz")
+        y = button_on_surface(panel, buttons, x, y, f"MOVEMENT DIRECTION: {hazard_dir_name(hsel)}", "map_cycle_hazard_dir")
+        if hazard_is_moving(hsel):
+            y = button_on_surface(panel, buttons, x, y, f"ZONE SPEED: {hazard_speed_value(hsel):.1f} CELLS/S", "map_cycle_hazard_speed")
     y += 4
     panel.blit(font_small.render(f"OBSTACLES ({len(map_obstacles)})", True, TEXT_MAIN), (x, y)); y += 21
     for o in map_obstacles:
@@ -3059,10 +3371,13 @@ def handle_grid_map_click(pos):
         c2 = (col, row)
         cs, ce = sorted((c1[0], c2[0])); rs, re = sorted((c1[1], c2[1]))
         width, height = ce - cs + 1, re - rs + 1
-        if grid_pending_placement in ("ash", "turbulence"):
-            htype = grid_pending_placement
+        if grid_pending_placement in ("ash", "turbulence", "moving_ash", "moving_turbulence"):
+            moving = grid_pending_placement.startswith("moving_")
+            htype = grid_pending_placement.replace("moving_", "")
             h = make_hazard(next_hazard_id, htype, cs, width, rs, height,
                             0, 0, random.randint(1, 3) if htype == "ash" else random.choice(TURBULENCE_LEVELS))
+            if moving:
+                h["dir"], h["spd"] = 3, 1      # default: drift East; edit in the panel
             hazards.append(h)
             selected_hazard_id = h["id"]
             next_hazard_id += 1
@@ -3101,11 +3416,14 @@ def handle_map_click(pos):
     if map_setup_mode == "corner2" and map_pending_corner1_latlon is not None:
         lat1, lon1 = map_pending_corner1_latlon
         lat2, lon2 = ll
-        if map_pending_placement in ("ash", "turbulence"):
-            htype = map_pending_placement
+        if map_pending_placement in ("ash", "turbulence", "moving_ash", "moving_turbulence"):
+            moving = map_pending_placement.startswith("moving_")
+            htype = map_pending_placement.replace("moving_", "")
             h = make_map_hazard(next_map_hazard_id, htype, lat1, lon1, lat2, lon2,
                                 0, 0,
                                 random.randint(1, 3) if htype == "ash" else random.choice(TURBULENCE_LEVELS))
+            if moving:
+                h["dir"], h["spd"] = 3, 1
             map_hazards.append(h); selected_map_hazard_id = h["id"]; next_map_hazard_id += 1
         else:
             full = map_pending_placement == "obstacle_full"
@@ -3153,6 +3471,14 @@ def handle_grid_action(action, target=None):
         if target is not None and 0 <= target < len(waypoints): waypoints.pop(target)
     elif action == "grid_add_ash": grid_pending_placement = "ash"; grid_setup_mode = "corner1"
     elif action == "grid_add_turbulence": grid_pending_placement = "turbulence"; grid_setup_mode = "corner1"
+    elif action == "grid_add_moving_ash": grid_pending_placement = "moving_ash"; grid_setup_mode = "corner1"
+    elif action == "grid_add_moving_turbulence": grid_pending_placement = "moving_turbulence"; grid_setup_mode = "corner1"
+    elif action == "grid_cycle_hazard_dir":
+        h = get_selected_hazard()
+        if h: h["dir"] = (int(h.get("dir", 0)) + 1) % len(HAZARD_DIRS)
+    elif action == "grid_cycle_hazard_speed":
+        h = get_selected_hazard()
+        if h: h["spd"] = (int(h.get("spd", 1)) + 1) % len(HAZARD_SPEED_VALUES)
     elif action == "grid_add_obstacle_full": grid_pending_placement = "obstacle_full"; grid_setup_mode = "corner1"
     elif action == "grid_add_obstacle_partial": grid_pending_placement = "obstacle_partial"; grid_setup_mode = "corner1"
     elif action == "grid_select_hazard": selected_hazard_id = target
@@ -3225,6 +3551,14 @@ def handle_map_action(action, target=None):
         if target is not None and 0 <= target < len(map_waypoints): map_waypoints.pop(target)
     elif action == "map_add_ash": map_pending_placement = "ash"; map_setup_mode = "corner1"
     elif action == "map_add_turbulence": map_pending_placement = "turbulence"; map_setup_mode = "corner1"
+    elif action == "map_add_moving_ash": map_pending_placement = "moving_ash"; map_setup_mode = "corner1"
+    elif action == "map_add_moving_turbulence": map_pending_placement = "moving_turbulence"; map_setup_mode = "corner1"
+    elif action == "map_cycle_hazard_dir":
+        h = get_selected_map_hazard()
+        if h: h["dir"] = (int(h.get("dir", 0)) + 1) % len(HAZARD_DIRS)
+    elif action == "map_cycle_hazard_speed":
+        h = get_selected_map_hazard()
+        if h: h["spd"] = (int(h.get("spd", 1)) + 1) % len(HAZARD_SPEED_VALUES)
     elif action == "map_add_obstacle_full": map_pending_placement = "obstacle_full"; map_setup_mode = "corner1"
     elif action == "map_add_obstacle_partial": map_pending_placement = "obstacle_partial"; map_setup_mode = "corner1"
     elif action == "map_select_hazard": selected_map_hazard_id = target
