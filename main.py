@@ -1486,6 +1486,14 @@ def reset_map_flight():
     globals()["sim_state"] = "SETUP"
 
 
+def random_altitude_band(min_span=1, max_span=4):
+    """Random hazard altitude band with z_min < z_max."""
+    top = GRID_LAYERS - 1
+    z0 = random.randint(0, top - min_span)
+    z1 = min(top, z0 + random.randint(min_span, max_span))
+    return z0, z1
+
+
 def add_random_grid_scenario():
     global next_obstacle_id, next_hazard_id, selected_obstacle_id, selected_hazard_id
     clear_grid_scenario(clear_waypoints=True)
@@ -1515,9 +1523,9 @@ def add_random_grid_scenario():
             cs = random.randint(2, GRID_COLS - w - 2)
             rs = random.randint(1, GRID_ROWS - h - 2)
             if safe_zone(cs, w, rs, h):
-                z = random.randint(0, GRID_LAYERS - 1)
+                z_lo, z_hi = random_altitude_band()
                 severity = random.randint(1, 3) if htype == "ash" else random.choice(TURBULENCE_LEVELS)
-                hz = make_hazard(next_hazard_id, htype, cs, w, rs, h, z, z, severity)
+                hz = make_hazard(next_hazard_id, htype, cs, w, rs, h, z_lo, z_hi, severity)
                 hazards.append(hz)
                 next_hazard_id += 1
                 break
@@ -1529,7 +1537,8 @@ def add_random_grid_scenario():
         trigger = nominal[min(SENSOR_RANGE_CELLS + 1, len(nominal) - 2)]
         cs = max(1, min(GRID_COLS - 3, trigger[0] - 1))
         rs = max(0, min(GRID_ROWS - 2, trigger[1] - 1))
-        hz = make_hazard(next_hazard_id, "turbulence", cs, 3, rs, 2, trigger[2], trigger[2], "HIGH")
+        hz = make_hazard(next_hazard_id, "turbulence", cs, 3, rs, 2,
+                         max(0, trigger[2] - 1), min(GRID_LAYERS - 1, trigger[2] + 1), "HIGH")
         hazards.append(hz)
         next_hazard_id += 1
 
@@ -1586,9 +1595,9 @@ def add_random_map_scenario():
         for _attempt in range(50):
             ll1, ll2 = random_map_rect()
             if away_from_points(ll1, ll2):
-                z = random.randint(0, GRID_LAYERS - 1)
+                z_lo, z_hi = random_altitude_band()
                 severity = random.randint(1, 3) if htype == "ash" else random.choice(TURBULENCE_LEVELS)
-                hz = make_map_hazard(next_map_hazard_id, htype, ll1[0], ll1[1], ll2[0], ll2[1], z, z, severity)
+                hz = make_map_hazard(next_map_hazard_id, htype, ll1[0], ll1[1], ll2[0], ll2[1], z_lo, z_hi, severity)
                 map_hazards.append(hz)
                 next_map_hazard_id += 1
                 break
@@ -1605,7 +1614,7 @@ def add_random_map_scenario():
         p2 = (min(MAP_WIDTH - 20, px[0] + 28), min(MAP_HEIGHT - 20, px[1] + 22))
         ll1, ll2 = screen_to_map_latlon(p1), screen_to_map_latlon(p2)
         hz = make_map_hazard(next_map_hazard_id, "turbulence", ll1[0], ll1[1], ll2[0], ll2[1],
-                             trigger[2], trigger[2], "HIGH")
+                             max(0, trigger[2] - 1), min(GRID_LAYERS - 1, trigger[2] + 1), "HIGH")
         map_hazards.append(hz)
         next_map_hazard_id += 1
 
