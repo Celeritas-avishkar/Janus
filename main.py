@@ -1,4 +1,5 @@
 
+
 import pygame
 import heapq
 import math
@@ -6,6 +7,8 @@ import os
 import random
 import time
 import threading
+import socket
+import json
 
 pygame.init()
 
@@ -281,7 +284,7 @@ def hazard_cost(h):
 def hazard_requires_replan(h):
     # Ash and MODERATE / HIGH turbulence are hard avoidance volumes.
     # LOW turbulence is pass-through (as the legend states): it is only a cost
-    # in A*, so when it is the only way through, the drone flies through it
+    # in the legacy cost model, so when it is the only way through, the drone flies through it
     # instead of reporting "no possible path".
     if h["type"] == "ash":
         return True
@@ -319,7 +322,7 @@ def hazard_label(h):
 # ============================================================
 # A zone's position is a pure function of the mission clock:
 #     position(T) = home + velocity * T      (it drifts straight off the map edge and is gone)
-# so the sensor and A* can ask "where will this zone be in t seconds?" and the
+# so the sensor and the planner can ask "where will this zone be in t seconds?" and the
 # drone can course-correct BEFORE the zone reaches its route.
 
 
@@ -697,7 +700,7 @@ def reconstruct_path(came_from, current):
 
 
 def grid_astar(start, goal):
-    """A* that knows where moving zones WILL be when the drone gets to each cell."""
+    """Legacy graph-search reference implementation; not used for active replanning."""
     if in_any_obstacle_grid(goal):
         return None
     v = DRONE_SPEED_VALUES[DRONE_SPEED_INDEX]
@@ -1039,6 +1042,284 @@ def map_astar(start, goal):
     return None
 
 
+
+# ============================================================
+# EXTERNAL SENSOR BRIDGE + BENDYRULER LOCAL NAVIGATION
+# ============================================================
+# UDP JSON telemetry listener. A hardware companion computer / sensor gateway can
+# send one JSON object per UDP datagram to 127.0.0.1:5005.
+# Required fields: type ("ash"|"turbulence"), x/y grid-cell centre OR lat/lon
+# in Map Mode. Optional: id, radius (cells), z_min/z_max (layer indices 0..8),
+# severity (ash 1..3; turbulence LOW|MODERATE|HIGH), confidence (0..1).
+# Example: {"id":"ash-01","type":"ash","x":12,"y":8,"radius":3,
+#           "z_min":0,"z_max":8,"severity":3,"confidence":0.94}
+# A hardware-specific driver must calibrate raw sensor readings and classify
+# severity before sending; no universal ash/turbulence threshold is assumed.
+SENSOR_UDP_HOST = "127.0.0.1"
+SENSOR_UDP_PORT = 5005
+SENSOR_TTL_SECONDS = 20.0
+SENSOR_QUEUE = []
+SENSOR_QUEUE_LOCK = threading.Lock()
+SENSOR_BRIDGE_STATUS = "WAITING FOR SENSOR TELEMETRY"
+SENSOR_BRIDGE_LAST_PACKET = 0.0
+SENSOR_BRIDGE_RUNNING = True
+sensor_hazards_grid = {}
+sensor_hazards_map = {}
+
+# Built-in software sensor simulator. It uses the same telemetry queue as UDP input.
+SENSOR_SIM_AUTO = False
+SENSOR_SIM_INTERVAL = 9.0
+SENSOR_SIM_NEXT_EVENT = 0.0
+SENSOR_SIM_EVENT_COUNT = 0
+SENSOR_SIM_LAST_EVENT = "NO SIMULATED DETECTIONS"
+SENSOR_SIM_SEQUENCE = 0
+
+
+def queue_simulated_sensor_detection(kind, severity=None, is_map=False):
+    global SENSOR_SIM_SEQUENCE, SENSOR_SIM_EVENT_COUNT, SENSOR_SIM_LAST_EVENT, SENSOR_BRIDGE_STATUS
+    kind = str(kind).lower()
+    if kind not in ("ash", "turbulence"):
+        return False
+    if kind == "ash":
+        severity = max(1, min(3, int(3 if severity is None else severity)))
+    else:
+        severity = str(severity or "HIGH").upper()
+        if severity not in TURBULENCE_LEVELS:
+            severity = "HIGH"
+    path = map_path if is_map else grid_path
+    segment = map_current_segment if is_map else grid_current_segment
+    if path:
+        max_ahead = max(1, min(8, len(path) - 1 - segment))
+        cell = path[min(len(path) - 1, segment + random.randint(1, max_ahead))]
+        gx, gy, gz = cell
+    else:
+        cols, rows = (MAP_COLS, MAP_ROWS) if is_map else (GRID_COLS, GRID_ROWS)
+        gx = random.randint(max(1, cols // 4), max(1, 3 * cols // 4))
+        gy = random.randint(max(1, rows // 4), max(1, 3 * rows // 4))
+        gz = random.randrange(GRID_LAYERS)
+    SENSOR_SIM_SEQUENCE += 1
+    packet = {"id": f"SIM-{kind.upper()}-{SENSOR_SIM_SEQUENCE}", "type": kind,
+              "radius": random.randint(2, 3), "z_min": 0 if kind == "ash" else max(0, gz-1),
+              "z_max": GRID_LAYERS-1 if kind == "ash" else min(GRID_LAYERS-1, gz+1),
+              "severity": severity, "confidence": round(random.uniform(0.86, 0.99), 2)}
+    if is_map:
+        lat, lon = map_cell_to_latlon((gx, gy, gz))
+        packet.update({"lat": lat, "lon": lon})
+    else:
+        packet.update({"x": gx, "y": gy})
+    with SENSOR_QUEUE_LOCK:
+        SENSOR_QUEUE.append(packet)
+        del SENSOR_QUEUE[:-100]
+    SENSOR_SIM_EVENT_COUNT += 1
+    SENSOR_SIM_LAST_EVENT = (f"SIMULATED ASH LEVEL {severity}" if kind == "ash"
+                             else f"SIMULATED {severity} TURBULENCE")
+    SENSOR_BRIDGE_STATUS = "SIMULATED SENSOR DATA QUEUED"
+    return True
+
+
+def sensor_simulator_tick(is_map, dt):
+    global SENSOR_SIM_NEXT_EVENT
+    if SENSOR_SIM_AUTO and time.perf_counter() >= SENSOR_SIM_NEXT_EVENT:
+        kind = random.choice(("ash", "turbulence"))
+        severity = random.randint(2, 3) if kind == "ash" else random.choice(("MODERATE", "HIGH"))
+        queue_simulated_sensor_detection(kind, severity, is_map)
+        SENSOR_SIM_NEXT_EVENT = time.perf_counter() + SENSOR_SIM_INTERVAL
+
+
+def clear_simulated_sensor_detections(is_map=None):
+    global SENSOR_SIM_LAST_EVENT
+    for mode in ((False, True) if is_map is None else (is_map,)):
+        collection = map_hazards if mode else hazards
+        collection[:] = [h for h in collection
+                         if not (h.get("sensor_source") and str(h.get("id", "")).startswith("SIM-"))]
+        target = sensor_hazards_map if mode else sensor_hazards_grid
+        for hid in list(target):
+            if str(hid).startswith("SIM-"):
+                del target[hid]
+    with SENSOR_QUEUE_LOCK:
+        SENSOR_QUEUE[:] = [p for p in SENSOR_QUEUE if not str(p.get("id", "")).startswith("SIM-")]
+    SENSOR_SIM_LAST_EVENT = "SIMULATED DETECTIONS CLEARED"
+
+
+def _sensor_udp_worker():
+    global SENSOR_BRIDGE_STATUS, SENSOR_BRIDGE_LAST_PACKET
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.bind((SENSOR_UDP_HOST, SENSOR_UDP_PORT))
+        sock.settimeout(1.0)
+        SENSOR_BRIDGE_STATUS = f"UDP SENSOR LISTENING :{SENSOR_UDP_PORT}"
+        while SENSOR_BRIDGE_RUNNING:
+            try:
+                raw, _addr = sock.recvfrom(8192)
+            except socket.timeout:
+                continue
+            try:
+                packet = json.loads(raw.decode("utf-8"))
+                if not isinstance(packet, dict):
+                    continue
+                with SENSOR_QUEUE_LOCK:
+                    SENSOR_QUEUE.append(packet)
+                    del SENSOR_QUEUE[:-100]
+                SENSOR_BRIDGE_LAST_PACKET = time.time()
+                SENSOR_BRIDGE_STATUS = "LIVE SENSOR DATA RECEIVED"
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                SENSOR_BRIDGE_STATUS = "INVALID SENSOR PACKET — EXPECTING JSON"
+    except OSError as exc:
+        SENSOR_BRIDGE_STATUS = f"SENSOR UDP ERROR: {str(exc)[:60]}"
+    finally:
+        sock.close()
+
+
+def _normalise_sensor_packet(packet):
+    """Validate external telemetry. Coordinates are grid cells or geographic lat/lon."""
+    kind = str(packet.get("type", "")).lower()
+    if kind not in ("ash", "turbulence"):
+        return None
+    try:
+        severity = packet.get("severity", 2 if kind == "ash" else "MODERATE")
+        if kind == "ash":
+            severity = max(1, min(3, int(severity)))
+        else:
+            severity = str(severity).upper()
+            if severity not in TURBULENCE_LEVELS:
+                return None
+        radius = max(1, min(20, int(packet.get("radius", 2))))
+        z_min = max(0, min(GRID_LAYERS - 1, int(packet.get("z_min", 0))))
+        z_max = max(z_min, min(GRID_LAYERS - 1, int(packet.get("z_max", GRID_LAYERS - 1 if kind == "ash" else z_min))))
+        return {"type": kind, "severity": severity, "radius": radius,
+                "z_min": z_min, "z_max": z_max,
+                "lat": packet.get("lat"), "lon": packet.get("lon"),
+                "x": packet.get("x"), "y": packet.get("y"),
+                "confidence": max(0.0, min(1.0, float(packet.get("confidence", 1.0)))),
+                "received": time.time()}
+    except (TypeError, ValueError):
+        return None
+
+
+def ingest_sensor_telemetry(is_map):
+    """Drain queued packets on the Pygame thread and refresh expiring sensor volumes."""
+    global SENSOR_BRIDGE_STATUS
+    with SENSOR_QUEUE_LOCK:
+        pending = list(SENSOR_QUEUE)
+        SENSOR_QUEUE.clear()
+    target = sensor_hazards_map if is_map else sensor_hazards_grid
+    for packet in pending:
+        data = _normalise_sensor_packet(packet)
+        if data is None or data["confidence"] < 0.35:
+            continue
+        hid = str(packet.get("id", f"sensor-{int(data['received'] * 1000)}"))
+        if is_map and data["lat"] is not None and data["lon"] is not None and map_surface is not None:
+            gx, gy, _ = map_coord_from_latlon((float(data["lat"]), float(data["lon"])), 0)
+        elif data["x"] is not None and data["y"] is not None:
+            gx, gy = int(data["x"]), int(data["y"])
+        else:
+            continue
+        cols, rows = (MAP_COLS, MAP_ROWS) if is_map else (GRID_COLS, GRID_ROWS)
+        if not (0 <= gx < cols and 0 <= gy < rows):
+            continue
+        r = data["radius"]
+        bounds = (max(0, gx-r), min(cols-1, gx+r), max(0, gy-r), min(rows-1, gy+r))
+        data.update({"id": hid, "bounds": bounds, "expires": time.time() + SENSOR_TTL_SECONDS})
+        target[hid] = data
+    now = time.time()
+    for hid in list(target):
+        if target[hid]["expires"] < now:
+            del target[hid]
+    # Keep live observations in the same collision model used by the planner.
+    collection = map_hazards if is_map else hazards
+    for h in list(collection):
+        if h.get("sensor_source"):
+            collection.remove(h)
+    for data in target.values():
+        x0, x1, y0, y1 = data["bounds"]
+        if is_map:
+            # Store a cell-aligned sensor volume as a normal map hazard rectangle.
+            a = map_cell_to_latlon((x0, y0, data["z_min"]))
+            b = map_cell_to_latlon((x1, y1, data["z_max"]))
+            if a and b:
+                h = make_map_hazard(data["id"], data["type"], a[0], a[1], b[0], b[1],
+                                    data["z_min"], data["z_max"], data["severity"])
+            else:
+                continue
+        else:
+            h = make_hazard(data["id"], data["type"], x0, x1-x0+1, y0, y1-y0+1,
+                            data["z_min"], data["z_max"], data["severity"])
+        h["sensor_source"] = True
+        h["confidence"] = data["confidence"]
+        collection.append(h)
+
+
+def _bearing(a, b):
+    return math.atan2(b[1] - a[1], b[0] - a[0])
+
+
+def bendyruler_path(start, goal, cols, rows, is_free, max_steps=None):
+    """BendyRuler-style local steering: sweep candidate headings, score progress,
+    smoothness and clearance, then continuously rejoin the target bearing.
+
+    This is deliberately not graph search/A*. It is a local obstacle-avoidance
+    controller suitable for the simulator; a bounded visited penalty helps it
+    escape shallow local minima. Vertical moves are evaluated as candidates too.
+    """
+    if not is_free(start) or not is_free(goal):
+        return None
+    current = tuple(start)
+    route = [current]
+    visited = {current}
+    previous_heading = None
+    max_steps = max_steps or (cols * rows * 3)
+    directions = [(1,0), (1,1), (0,1), (-1,1), (-1,0), (-1,-1), (0,-1), (1,-1)]
+    for _ in range(max_steps):
+        if current == tuple(goal):
+            return route
+        desired = _bearing(current, goal)
+        candidates = []
+        for dx, dy in directions:
+            nxt = (current[0] + dx, current[1] + dy, current[2])
+            if not (0 <= nxt[0] < cols and 0 <= nxt[1] < rows) or not is_free(nxt):
+                continue
+            if dx and dy:
+                if not is_free((current[0]+dx, current[1], current[2])) or not is_free((current[0], current[1]+dy, current[2])):
+                    continue
+            heading = math.atan2(dy, dx)
+            # Look ahead along the proposed heading; reject a heading that immediately
+            # enters a blocked cell and reward clearance from nearby threat volumes.
+            clearance = 0
+            for k in range(1, 5):
+                q = (current[0] + dx*k, current[1] + dy*k, current[2])
+                if not (0 <= q[0] < cols and 0 <= q[1] < rows) or not is_free(q):
+                    break
+                clearance += 1
+            turn = 0.0 if previous_heading is None else abs((heading-previous_heading+math.pi)%(2*math.pi)-math.pi)
+            distance = octile_heuristic(nxt, goal)
+            revisit = 18.0 if nxt in visited else 0.0
+            score = distance + 0.55*turn + 1.4/(clearance+0.35) + revisit
+            candidates.append((score, nxt, heading))
+        for dz in (-1, 1):
+            nz = current[2] + dz
+            nxt = (current[0], current[1], nz)
+            if 0 <= nz < GRID_LAYERS and is_free(nxt):
+                score = octile_heuristic(nxt, goal) + 2.0 + (12.0 if nxt in visited else 0.0)
+                candidates.append((score, nxt, previous_heading))
+        if not candidates:
+            return None
+        candidates.sort(key=lambda item: item[0])
+        # Avoid immediate reversal if another near-optimal steering option exists.
+        chosen = candidates[0]
+        if len(candidates) > 1 and chosen[1] in visited and candidates[1][1] not in visited:
+            chosen = candidates[1]
+        _, current, previous_heading = chosen
+        route.append(current)
+        visited.add(current)
+    return None
+
+
+# Start listener in the background. Missing port permission is reported in the HUD;
+# the rest of the simulator continues using its built-in scenario hazards.
+_sensor_thread = threading.Thread(target=_sensor_udp_worker, daemon=True)
+_sensor_thread.start()
+
+
 # ============================================================
 # GENERIC REAL-TIME MISSION STATE
 # ============================================================
@@ -1063,6 +1344,7 @@ grid_response_timer = 0.0
 grid_pending_threat = None
 grid_threat_lock = None
 grid_replan_count = 0
+grid_failed_replan_attempts = 0
 grid_last_replan_ms = 0.0
 grid_hazard_cells_crossed = 0
 grid_last_counted_segment = -1
@@ -1096,6 +1378,7 @@ map_response_timer = 0.0
 map_pending_threat = None
 map_threat_lock = None
 map_replan_count = 0
+map_failed_replan_attempts = 0
 map_last_replan_ms = 0.0
 map_hazard_cells_crossed = 0
 map_last_counted_segment = -1
@@ -1136,12 +1419,12 @@ def build_targets_map():
 
 def grid_route_for_leg(start, target):
     # Nominal leg is intentionally hazard-blind. The live sensor detects threats
-    # ahead and A* is invoked only then, so the reroute is visible in flight.
+    # ahead and BendyRuler is invoked only then, so the reroute is visible in flight.
     return direct_path(start, target)
 
 
 def map_route_for_leg(start, target):
-    # Hazard-blind nominal leg; map_astar runs only after live detection.
+    # Hazard-blind nominal leg; BendyRuler runs only after live detection.
     return direct_path(start, target)
 
 
@@ -1169,7 +1452,14 @@ def grid_target_advance():
     global grid_threat_lock, grid_hazard_ahead, grid_hazard_cells
     global grid_returning, grid_aborted
     if grid_returning:
-        # Reached START after "no possible path": end the mission here.
+        # RTH completes only at the exact launch cell.
+        if not grid_path or tuple(grid_path[-1]) != tuple(start_cell):
+            grid_returning = False
+            grid_aborted = True
+            grid_mission_complete = True
+            grid_mission_end_ticks = pygame.time.get_ticks()
+            announce("RTH ROUTE ENDED BEFORE HOME — MISSION ABORTED", "warning", 3.5)
+            return
         grid_returning = False
         grid_aborted = True
         grid_mission_complete = True
@@ -1180,10 +1470,9 @@ def grid_target_advance():
     if grid_target_index + 1 < len(targets):
         grid_target_index += 1
         new_path = grid_route_for_leg(grid_path[-1], targets[grid_target_index])
-        if not new_path:
-            grid_mission_complete = True
-            grid_mission_end_ticks = pygame.time.get_ticks()
-            announce("WAYPOINT ROUTE FAILED — MISSION HALTED", "warning", 2.0)
+        if not new_path or tuple(new_path[-1]) != tuple(targets[grid_target_index]):
+            announce("WAYPOINT UNREACHABLE — RETURNING HOME", "warning", 2.2)
+            grid_begin_return_to_start()
             return
 
         grid_path = new_path
@@ -1208,6 +1497,11 @@ def grid_target_advance():
             if lows:
                 announce("LOW TURBULENCE DETECTED — HOLDING COURSE", "safe", 1.0)
     else:
+        # A mission is successful only at the exact configured goal cell.
+        if not grid_path or tuple(grid_path[-1]) != tuple(goal_cell):
+            grid_begin_return_to_start()
+            announce("GOAL NOT REACHED — RETURNING HOME", "warning", 2.2)
+            return
         grid_mission_complete = True
         grid_mission_end_ticks = pygame.time.get_ticks()
         announce("MISSION COMPLETE — GOAL REACHED", "safe", 2.5)
@@ -1220,6 +1514,14 @@ def map_target_advance():
     global map_threat_lock, map_hazard_ahead, map_hazard_cells
     global map_returning, map_aborted
     if map_returning:
+        exact_home = map_coord_from_latlon(map_start_latlon, map_start_z)
+        if not map_path or tuple(map_path[-1]) != tuple(exact_home):
+            map_returning = False
+            map_aborted = True
+            map_mission_complete = True
+            map_mission_end_ticks = pygame.time.get_ticks()
+            announce("RTH ROUTE ENDED BEFORE HOME — MISSION ABORTED", "warning", 3.5)
+            return
         map_returning = False
         map_aborted = True
         map_mission_complete = True
@@ -1230,10 +1532,9 @@ def map_target_advance():
     if map_target_index + 1 < len(targets):
         map_target_index += 1
         new_path = map_route_for_leg(map_path[-1], targets[map_target_index])
-        if not new_path:
-            map_mission_complete = True
-            map_mission_end_ticks = pygame.time.get_ticks()
-            announce("WAYPOINT ROUTE FAILED — MISSION HALTED", "warning", 2.0)
+        if not new_path or tuple(new_path[-1]) != tuple(targets[map_target_index]):
+            announce("WAYPOINT UNREACHABLE — RETURNING HOME", "warning", 2.2)
+            map_begin_return_to_start()
             return
 
         map_path = new_path
@@ -1255,6 +1556,12 @@ def map_target_advance():
             if lows:
                 announce("LOW TURBULENCE DETECTED — HOLDING COURSE", "safe", 1.0)
     else:
+        # A mission is successful only at the exact configured geographic goal cell.
+        exact_goal = map_coord_from_latlon(map_goal_latlon, map_goal_z)
+        if not map_path or tuple(map_path[-1]) != tuple(exact_goal):
+            map_begin_return_to_start()
+            announce("GOAL NOT REACHED — RETURNING HOME", "warning", 2.2)
+            return
         map_mission_complete = True
         map_mission_end_ticks = pygame.time.get_ticks()
         announce("MISSION COMPLETE — GOAL REACHED", "safe", 2.5)
@@ -1550,6 +1857,75 @@ def draw_replan_alert(key):
         pygame.draw.rect(screen, col, bar, 1)
 
 
+def safe_route_to_target(start, target, cols, rows, is_free, max_goal_radius=0,
+                         hazard_probe=None):
+    """Time-aware A* to the exact target cell.
+
+    `is_free` checks permanent geometry (solid obstacles). `hazard_probe` checks
+    where static and moving avoidance zones will be when the drone reaches a cell.
+    The target is never silently replaced by a nearby cell.
+    """
+    start, target = tuple(start), tuple(target)
+    if not is_free(start):
+        return None
+
+    candidates = []
+    for radius in range(max_goal_radius + 1):
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                for dz in range(-1, 2):
+                    if max(abs(dx), abs(dy), abs(dz)) != radius:
+                        continue
+                    cell = (target[0] + dx, target[1] + dy, target[2] + dz)
+                    if (0 <= cell[0] < cols and 0 <= cell[1] < rows
+                            and 0 <= cell[2] < GRID_LAYERS and is_free(cell)):
+                        candidates.append((octile_heuristic(cell, target) + abs(dz) * 2.0, cell))
+        if candidates:
+            break
+    if not candidates:
+        return None
+
+    goal_cells = {cell for _, cell in candidates}
+    speed = max(0.1, DRONE_SPEED_VALUES[DRONE_SPEED_INDEX])
+    frontier = [(min(octile_heuristic(start, g) for g in goal_cells), 0, start)]
+    came_from = {}
+    cost_so_far = {start: 0.0}
+    arrival_time = {start: 0.0}
+    serial = 1
+
+    while frontier:
+        _, _, current = heapq.heappop(frontier)
+        current_time = arrival_time[current]
+        if current in goal_cells:
+            if hazard_probe is None or hazard_probe(current, current_time) is None:
+                return reconstruct_path(came_from, current)
+            continue
+
+        for nxt in neighbor_moves(current, cols, rows, is_free):
+            step_time = step_length(current, nxt) / speed
+            next_time = current_time + step_time
+            if hazard_probe is not None:
+                if hazard_probe(nxt, next_time) is not None:
+                    continue
+                # A diagonal must not cut through the corner of a hazard volume.
+                if current[0] != nxt[0] and current[1] != nxt[1]:
+                    side_a = (nxt[0], current[1], current[2])
+                    side_b = (current[0], nxt[1], current[2])
+                    if hazard_probe(side_a, next_time) is not None or hazard_probe(side_b, next_time) is not None:
+                        continue
+
+            step_cost = base_move_cost(current, nxt)
+            new_cost = cost_so_far[current] + step_cost
+            if new_cost < cost_so_far.get(nxt, float("inf")):
+                cost_so_far[nxt] = new_cost
+                came_from[nxt] = current
+                arrival_time[nxt] = next_time
+                heuristic = min(octile_heuristic(nxt, g) for g in goal_cells)
+                heapq.heappush(frontier, (new_cost + heuristic, serial, nxt))
+                serial += 1
+    return None
+
+
 def grid_start_replan_sequence(threat):
     global grid_response_state, grid_response_timer, grid_pending_threat, grid_threat_lock
     global grid_hazard_ahead, grid_hazard_cells, grid_progress
@@ -1595,10 +1971,23 @@ def map_clear_return_state():
 def grid_begin_return_to_start():
     """No safe route to the target exists: abandon the leg and fly back to START."""
     global grid_path, grid_old_path, grid_old_path_timer, grid_returning, grid_aborted
-    global grid_progress, grid_threat_lock, grid_hazard_ahead
-    global grid_mission_complete, grid_mission_end_ticks
-    # If we are already returning and even that fails, stop instead of looping.
-    back = None if grid_returning else grid_astar(grid_current_cell(), start_cell)
+    global grid_progress, grid_threat_lock, grid_hazard_ahead, grid_current_segment
+    global grid_mission_complete, grid_mission_end_ticks, grid_scan_due, grid_last_counted_segment
+    global grid_response_state, grid_response_timer, grid_pending_threat
+    # If an avoidance replan fails while already on RTH, stop safely rather
+    # than repeatedly rebuilding the same impossible return route.
+    if grid_returning:
+        grid_returning = False
+        grid_aborted = True
+        grid_mission_complete = True
+        grid_mission_end_ticks = pygame.time.get_ticks()
+        announce("RTH BLOCKED — HOLDING POSITION / MISSION ABORTED", "warning", 3.5)
+        return
+    # RTH must reach the exact launch cell; never accept a nearby approach cell.
+    back = safe_route_to_target(
+        grid_current_cell(), start_cell, GRID_COLS, GRID_ROWS,
+        lambda c: not in_any_obstacle_grid(c), max_goal_radius=0,
+        hazard_probe=make_hazard_probe(hazards, pad=0.2))
     if back is None:
         grid_returning = False
         grid_aborted = True
@@ -1608,21 +1997,42 @@ def grid_begin_return_to_start():
         return
     grid_old_path = grid_path[grid_current_segment:]
     grid_old_path_timer = 3.5
-    grid_path = grid_path[:grid_current_segment] + back
+    # Replace the active route from the drone's actual current cell and reset
+    # its segment index. Keeping the old prefix can leave the aircraft indexed
+    # against a stale segment after an RTH route is installed.
+    grid_response_state = "IDLE"
+    grid_response_timer = 0.0
+    grid_pending_threat = None
+    grid_path = back
+    grid_current_segment = 0
+    grid_last_counted_segment = -1
+    grid_scan_due = True
     refresh_grid_pixel_path()
     grid_progress = 0.0
     grid_returning = True
     grid_threat_lock = None
     grid_hazard_ahead = False
-    announce("NO POSSIBLE PATH — RETURNING TO START", "warning", 3.0)
+    announce("NO SAFE ROUTE TO TARGET — RTH ACTIVE", "warning", 3.0)
 
 
 def map_begin_return_to_start():
     global map_path, map_old_path, map_old_path_timer, map_returning, map_aborted
-    global map_progress, map_threat_lock, map_hazard_ahead
-    global map_mission_complete, map_mission_end_ticks
+    global map_progress, map_threat_lock, map_hazard_ahead, map_current_segment
+    global map_mission_complete, map_mission_end_ticks, map_scan_due, map_last_counted_segment
+    global map_response_state, map_response_timer, map_pending_threat
+    if map_returning:
+        map_returning = False
+        map_aborted = True
+        map_mission_complete = True
+        map_mission_end_ticks = pygame.time.get_ticks()
+        announce("RTH BLOCKED — HOLDING POSITION / MISSION ABORTED", "warning", 3.5)
+        return
     home = map_coord_from_latlon(map_start_latlon, map_start_z)
-    back = None if map_returning else map_astar(map_current_cell(), home)
+    back = safe_route_to_target(
+        map_current_cell(), home, MAP_COLS, MAP_ROWS,
+        lambda c: not in_any_map_obstacle(c),
+        max_goal_radius=0,
+        hazard_probe=make_hazard_probe(map_hazards, pad=0.2))
     if back is None:
         map_returning = False
         map_aborted = True
@@ -1632,13 +2042,19 @@ def map_begin_return_to_start():
         return
     map_old_path = map_path[map_current_segment:]
     map_old_path_timer = 3.5
-    map_path = map_path[:map_current_segment] + back
+    map_response_state = "IDLE"
+    map_response_timer = 0.0
+    map_pending_threat = None
+    map_path = back
+    map_current_segment = 0
+    map_last_counted_segment = -1
+    map_scan_due = True
     refresh_map_pixel_path()
     map_progress = 0.0
     map_returning = True
     map_threat_lock = None
     map_hazard_ahead = False
-    announce("NO POSSIBLE PATH — RETURNING TO START", "warning", 3.0)
+    announce("NO SAFE ROUTE TO TARGET — RTH ACTIVE", "warning", 3.0)
 
 
 def grid_execute_replan():
@@ -1656,9 +2072,14 @@ def grid_execute_replan():
     goal = start_cell if grid_returning else targets[grid_target_index]
     old_path = grid_path[grid_current_segment:]
     t0 = time.perf_counter()
-    new_remaining = grid_astar(start, goal)
+    new_remaining = safe_route_to_target(
+        start, goal, GRID_COLS, GRID_ROWS,
+        lambda c: not in_any_obstacle_grid(c),
+        hazard_probe=make_hazard_probe(hazards, pad=0.2))
     elapsed = (time.perf_counter() - t0) * 1000.0
     grid_last_replan_ms = elapsed
+    if new_remaining is not None and tuple(new_remaining[-1]) != tuple(goal):
+        new_remaining = None
     if new_remaining is not None:
         grid_old_path = old_path
         grid_old_path_timer = 3.5
@@ -1671,10 +2092,19 @@ def grid_execute_replan():
         set_alert_phase("grid", "CORRECTED")
         announce("COURSE CORRECTION — NEW TRAJECTORY LOCKED", "info", 1.5)
     else:
+        # No safe path around the injected event: immediately abandon this leg
+        # and attempt RTH, whether the blocked target is the goal or a waypoint.
+        global grid_failed_replan_attempts
+        grid_failed_replan_attempts = 0
+        set_alert_phase("grid", "FAILED")
         grid_response_state = "IDLE"
         grid_response_timer = 0.0
-        set_alert_phase("grid", "FAILED")
+        grid_pending_threat = None
+        grid_threat_lock = None
+        announce("NO SAFE REROUTE — RETURNING HOME", "warning", 2.2)
         grid_begin_return_to_start()
+    if new_remaining is not None:
+        grid_failed_replan_attempts = 0
     grid_pending_threat = None
     grid_hazard_ahead = True
 
@@ -1694,9 +2124,14 @@ def map_execute_replan():
     goal = map_coord_from_latlon(map_start_latlon, map_start_z) if map_returning else targets[map_target_index]
     old_path = map_path[map_current_segment:]
     t0 = time.perf_counter()
-    new_remaining = map_astar(start, goal)
+    new_remaining = safe_route_to_target(
+        start, goal, MAP_COLS, MAP_ROWS,
+        lambda c: not in_any_map_obstacle(c),
+        hazard_probe=make_hazard_probe(map_hazards, pad=0.2))
     elapsed = (time.perf_counter() - t0) * 1000.0
     map_last_replan_ms = elapsed
+    if new_remaining is not None and tuple(new_remaining[-1]) != tuple(goal):
+        new_remaining = None
     if new_remaining is not None:
         map_old_path = old_path
         map_old_path_timer = 3.5
@@ -1709,10 +2144,19 @@ def map_execute_replan():
         set_alert_phase("map", "CORRECTED")
         announce("COURSE CORRECTION — NEW TRAJECTORY LOCKED", "info", 1.5)
     else:
+        # No safe path around the injected event: immediately abandon this leg
+        # and attempt RTH, whether the blocked target is the goal or a waypoint.
+        global map_failed_replan_attempts
+        map_failed_replan_attempts = 0
+        set_alert_phase("map", "FAILED")
         map_response_state = "IDLE"
         map_response_timer = 0.0
-        set_alert_phase("map", "FAILED")
+        map_pending_threat = None
+        map_threat_lock = None
+        announce("NO SAFE REROUTE — RETURNING HOME", "warning", 2.2)
         map_begin_return_to_start()
+    if new_remaining is not None:
+        map_failed_replan_attempts = 0
     map_pending_threat = None
     map_hazard_ahead = True
 
@@ -1724,13 +2168,15 @@ def grid_update_mission(dt):
     if grid_mission_complete or not grid_path:
         return
 
+    sensor_simulator_tick(False, dt)
+    ingest_sensor_telemetry(False)
     advance_hazards(dt, False)   # moving zones drift every frame, even while the drone is holding
 
     if grid_old_path_timer > 0:
         grid_old_path_timer = max(0.0, grid_old_path_timer - dt)
 
     if grid_response_state == "COMPUTING":
-        grid_execute_replan()  # A* runs here, one frame after "COMPUTING" was drawn
+        grid_execute_replan()  # BendyRuler runs here, one frame after "COMPUTING" was drawn
         return
     if grid_response_state == "DETECTED":
         grid_response_timer -= dt
@@ -1791,6 +2237,8 @@ def map_update_mission(dt):
     if map_mission_complete or not map_path:
         return
 
+    sensor_simulator_tick(True, dt)
+    ingest_sensor_telemetry(True)
     advance_hazards(dt, True)
 
     if map_old_path_timer > 0:
@@ -2165,6 +2613,7 @@ def clear_grid_scenario(clear_waypoints=True):
     grid_pending_corner1 = None
     grid_setup_message = "Scenario cleared — add hazards or randomize."
     grid_replan_count = 0
+    grid_failed_replan_attempts = 0
     grid_last_replan_ms = 0.0
     grid_hazard_cells_crossed = 0
     grid_hazard_ahead = False
@@ -2236,6 +2685,7 @@ def clear_map_scenario(clear_waypoints=True):
     map_pending_placement = None
     map_pending_corner1_latlon = None
     map_replan_count = 0
+    map_failed_replan_attempts = 0
     map_last_replan_ms = 0.0
     map_hazard_cells_crossed = 0
     map_hazard_ahead = False
@@ -2310,7 +2760,7 @@ def add_random_grid_scenario():
                 next_obstacle_id += 1
                 break
 
-    for htype in ["ash", "ash", "turbulence", "turbulence", "turbulence"]:
+    for htype in [random.choice(("ash", "turbulence")) for _ in range(random.randint(3, 6))]:
         for _attempt in range(50):
             w, h = random.choice([(2, 2), (3, 2), (3, 3), (4, 2)])
             cs = random.randint(2, GRID_COLS - w - 2)
@@ -2325,17 +2775,9 @@ def add_random_grid_scenario():
                 next_hazard_id += 1
                 break
 
-    # Guarantee one visible, route-intersecting high-turbulence trigger so the demo
-    # reliably shows live detection/replanning on every randomize press.
-    nominal = direct_path(start_cell, goal_cell)
-    if len(nominal) >= 8:
-        trigger = nominal[min(SENSOR_RANGE_CELLS + 1, len(nominal) - 2)]
-        cs = max(1, min(GRID_COLS - 3, trigger[0] - 1))
-        rs = max(0, min(GRID_ROWS - 2, trigger[1] - 1))
-        hz = make_hazard(next_hazard_id, "turbulence", cs, 3, rs, 2,
-                         max(0, trigger[2] - 1), min(GRID_LAYERS - 1, trigger[2] + 1), "HIGH")
-        hazards.append(hz)
-        next_hazard_id += 1
+    # Hazard positions/types/severity/motion are fully randomized above.
+    # Do not force a fixed hazard onto the nominal route: each injection should
+    # produce a different scenario, including cases where the route is initially clear.
 
     selected_obstacle_id = obstacles[0]["id"] if obstacles else None
     selected_hazard_id = hazards[0]["id"] if hazards else None
@@ -2386,7 +2828,7 @@ def add_random_map_scenario():
                 next_map_obstacle_id += 1
                 break
 
-    for htype in ["ash", "turbulence", "turbulence", "ash", "turbulence"]:
+    for htype in [random.choice(("ash", "turbulence")) for _ in range(random.randint(3, 6))]:
         for _attempt in range(50):
             ll1, ll2 = random_map_rect()
             if away_from_points(ll1, ll2):
@@ -2399,21 +2841,7 @@ def add_random_map_scenario():
                 next_map_hazard_id += 1
                 break
 
-    # Guarantee one visible, route-intersecting high-turbulence trigger for the map demo.
-    start = map_coord_from_latlon(map_start_latlon, map_start_z)
-    goal = map_coord_from_latlon(map_goal_latlon, map_goal_z)
-    nominal = direct_path(start, goal)
-    if len(nominal) >= 8:
-        trigger = nominal[min(SENSOR_RANGE_CELLS + 1, len(nominal) - 2)]
-        px = ((trigger[0] + 0.5) / MAP_COLS * MAP_WIDTH,
-              (trigger[1] + 0.5) / MAP_ROWS * MAP_HEIGHT)
-        p1 = (max(20, px[0] - 28), max(20, px[1] - 22))
-        p2 = (min(MAP_WIDTH - 20, px[0] + 28), min(MAP_HEIGHT - 20, px[1] + 22))
-        ll1, ll2 = screen_to_map_latlon(p1), screen_to_map_latlon(p2)
-        hz = make_map_hazard(next_map_hazard_id, "turbulence", ll1[0], ll1[1], ll2[0], ll2[1],
-                             max(0, trigger[2] - 1), min(GRID_LAYERS - 1, trigger[2] + 1), "HIGH")
-        map_hazards.append(hz)
-        next_map_hazard_id += 1
+    # No fixed route-trigger hazard: each map injection remains independently random.
 
     selected_map_obstacle_id = map_obstacles[0]["id"] if map_obstacles else None
     selected_map_hazard_id = map_hazards[0]["id"] if map_hazards else None
@@ -2432,6 +2860,7 @@ def start_grid_simulation():
     global grid_hazard_cells_crossed, grid_hazard_ahead, grid_hazard_cells, grid_hazard_was_detected
     global grid_response_state, grid_response_timer, grid_pending_threat, grid_threat_lock
     global grid_old_path, grid_old_path_timer, grid_show_report, grid_mission_start_ticks, grid_mission_end_ticks
+    global grid_failed_replan_attempts
     global grid_setup_message
     if start_cell == goal_cell and not waypoints:
         grid_setup_message = "Start and goal cannot be the same cell."
@@ -2442,20 +2871,12 @@ def start_grid_simulation():
     if any(hazard_blocks_cell(start_cell, h) for h in hazards):
         grid_setup_message = "START is inside an avoidance hazard."
         return
-    if any(hazard_blocks_cell(goal_cell, h) for h in hazards):
-        grid_setup_message = "GOAL is inside an avoidance hazard — move it outside the plume."
-        return
     for idx, wp in enumerate(waypoints, start=1):
         # Waypoints are validated as full 3-D cells at their selected altitude.
         # The actual leg is still initially nominal; the live sensor then catches
         # threats along the way and replans around them.
         if in_any_obstacle_grid(wp):
             grid_setup_message = f"Waypoint #{idx} is inside an obstacle at {alt_ft(wp[2]):,} ft."
-            return
-        blocking = [h for h in hazards if hazard_blocks_cell(wp, h)]
-        if blocking:
-            grid_setup_message = (f"Waypoint #{idx} is inside {hazard_label(blocking[0])} "
-                                  f"at {alt_ft(wp[2]):,} ft.")
             return
     targets = build_targets_grid()
     first_path = grid_route_for_leg(start_cell, targets[0])
@@ -2469,6 +2890,7 @@ def start_grid_simulation():
     grid_target_index = 0
     grid_mission_complete = False
     grid_replan_count = 0
+    grid_failed_replan_attempts = 0
     grid_last_replan_ms = 0.0
     grid_hazard_cells_crossed = 0
     grid_hazard_ahead = False
@@ -2496,6 +2918,7 @@ def start_map_simulation():
     global map_hazard_cells_crossed, map_hazard_ahead, map_hazard_cells, map_response_state
     global map_response_timer, map_pending_threat, map_threat_lock, map_old_path, map_old_path_timer
     global map_show_report, map_mission_start_ticks, map_mission_end_ticks, map_status
+    global map_failed_replan_attempts
     if map_surface is None and not load_real_map():
         return
     start = map_coord_from_latlon(map_start_latlon, map_start_z)
@@ -2509,9 +2932,6 @@ def start_map_simulation():
     if any(hazard_blocks_cell(start, h) for h in map_hazards):
         map_status = "START is inside an avoidance hazard."
         return
-    if any(hazard_blocks_cell(goal, h) for h in map_hazards):
-        map_status = "GOAL is inside an avoidance hazard — move it outside the plume."
-        return
     targets = build_targets_map()
     for idx, wp in enumerate(map_waypoints, start=1):
         wp_cell = map_waypoint_cell(wp)
@@ -2519,11 +2939,6 @@ def start_map_simulation():
         # avoidance hazards before launching the mission.
         if in_any_map_obstacle(wp_cell):
             map_status = f"Waypoint #{idx} is inside an obstacle at {alt_ft(wp_cell[2]):,} ft."
-            return
-        blocking = [h for h in map_hazards if hazard_blocks_cell(wp_cell, h)]
-        if blocking:
-            map_status = (f"Waypoint #{idx} is inside {hazard_label(blocking[0])} "
-                          f"at {alt_ft(wp_cell[2]):,} ft.")
             return
     map_path = map_route_for_leg(start, targets[0])
     if not map_path:
@@ -2535,6 +2950,7 @@ def start_map_simulation():
     map_target_index = 0
     map_mission_complete = False
     map_replan_count = 0
+    map_failed_replan_attempts = 0
     map_last_replan_ms = 0.0
     map_hazard_cells_crossed = 0
     map_hazard_ahead = False
@@ -2975,6 +3391,12 @@ def draw_real_map():
         screen.fill((20, 24, 30), pygame.Rect(0, 0, MAP_WIDTH, MAP_HEIGHT))
         ox, oy = map_pan_live_offset if map_is_panning else (0, 0)
         screen.blit(map_surface, (int(ox), int(oy)))
+        # Running map mode uses a subdued navigation-display base so weather
+        # returns, route symbology and aircraft cues remain legible.
+        if sim_state == "RUNNING":
+            tint = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+            tint.fill((4, 12, 23, 142))
+            screen.blit(tint, (0, 0))
     else:
         screen.fill((35, 45, 55), pygame.Rect(0, 0, MAP_WIDTH, MAP_HEIGHT))
         screen.blit(font.render("REAL-WORLD MAP UNAVAILABLE", True, TEXT_MAIN), (24, 24))
@@ -2983,13 +3405,33 @@ def draw_real_map():
     screen.set_clip(pygame.Rect(0, 0, MAP_WIDTH, MAP_HEIGHT))
     for h in map_hazards:
         rect = map_zone_screen_rect(h)
-        surf = pygame.Surface(rect.size, pygame.SRCALPHA)
-        surf.fill(ash_rgba(h["severity"]) if h["type"] == "ash" else turbulence_rgba(h["severity"]))
-        screen.blit(surf, rect.topleft)
-        border = WARNING_COLOR if hazard_requires_replan(h) else SAFE_COLOR
-        pygame.draw.rect(screen, border, rect, 1)
-        if rect.width > 55:
-            screen.blit(font_micro.render(hazard_label(h) + hazard_move_suffix(h), True, (235, 240, 235)), (rect.x + 3, rect.y + 3))
+        if sim_state == "RUNNING":
+            # Weather-radar style returns: green / amber / red / magenta by
+            # severity. These are simulated hazard echoes, not measured radar.
+            sev = h.get("severity", 1)
+            if h["type"] == "turbulence":
+                sev = {"LOW": 1, "MODERATE": 2, "HIGH": 3}.get(str(sev).upper(), 3)
+            level = max(1, min(3, int(sev)))
+            radar_colors = {1: (55, 220, 115), 2: (255, 205, 45), 3: (255, 65, 55)}
+            radar_color = radar_colors[level]
+            if h["type"] == "ash":
+                radar_color = (220, 90, 235) if level == 3 else (190, 130, 220)
+            cloud = pygame.Surface((max(2, rect.width), max(2, rect.height)), pygame.SRCALPHA)
+            cloud.fill((*radar_color, 68 + level * 28))
+            screen.blit(cloud, rect.topleft)
+            pygame.draw.ellipse(screen, (*radar_color, 255), rect, 2)
+            pygame.draw.ellipse(screen, (235, 245, 255), rect.inflate(-8, -8), 1)
+            if rect.width > 55:
+                tag = "ASH" if h["type"] == "ash" else "TURB"
+                screen.blit(font_micro.render(f"{tag} / LVL {level}", True, (245, 248, 255)), (rect.x + 4, rect.y + 4))
+        else:
+            surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+            surf.fill(ash_rgba(h["severity"]) if h["type"] == "ash" else turbulence_rgba(h["severity"]))
+            screen.blit(surf, rect.topleft)
+            border = WARNING_COLOR if hazard_requires_replan(h) else SAFE_COLOR
+            pygame.draw.rect(screen, border, rect, 1)
+            if rect.width > 55:
+                screen.blit(font_micro.render(hazard_label(h) + hazard_move_suffix(h), True, (235, 240, 235)), (rect.x + 3, rect.y + 3))
         if hazard_is_moving(h):
             ghost = map_ghost_rect(h)
             if ghost is not None:
@@ -3054,6 +3496,82 @@ def draw_real_map():
     # Keep only the required OSM attribution on the imagery. The map title is
     # rendered in the right-hand panel instead of over the geographic map.
     screen.blit(font_micro.render("© OpenStreetMap contributors", True, (20, 25, 35)), (12, MAP_HEIGHT - 18))
+
+
+def draw_avionics_weather_overlay():
+    """Boeing-inspired navigation/weather presentation; all values are simulated."""
+    if not map_path or not map_pixel_path:
+        return
+
+    # Current aircraft position and track from the active route segment.
+    if map_current_segment >= len(map_pixel_path) - 1:
+        pos = map_pixel_path[-1]
+        a = map_pixel_path[-2] if len(map_pixel_path) > 1 else pos
+        b = pos
+        current_z = map_path[-1][2]
+    else:
+        a = map_pixel_path[map_current_segment]
+        b = map_pixel_path[map_current_segment + 1]
+        t = ease_in_out(map_progress)
+        pos = (int(lerp(a[0], b[0], t)), int(lerp(a[1], b[1], t)))
+        current_z = map_path[map_current_segment][2]
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    track = (math.degrees(math.atan2(dx, -dy)) + 360.0) % 360.0 if dx or dy else 0.0
+
+    # Header strip.
+    header = pygame.Surface((MAP_WIDTH, 42), pygame.SRCALPHA)
+    header.fill((3, 10, 19, 225))
+    screen.blit(header, (0, 0))
+    pygame.draw.line(screen, (70, 145, 190), (0, 41), (MAP_WIDTH, 41), 1)
+    screen.blit(font_small.render("WXR  /  NAV DISPLAY", True, (135, 220, 255)), (14, 8))
+    screen.blit(font_micro.render("SIMULATED WEATHER RETURNS", True, (165, 190, 205)), (205, 13))
+    right_text = f"TRK {track:03.0f}°    ALT {alt_ft(current_z):,} FT    RNG {SENSOR_RANGE_CELLS} CELLS"
+    rt = font_small.render(right_text, True, (225, 238, 245))
+    screen.blit(rt, (MAP_WIDTH - rt.get_width() - 14, 10))
+
+    # Range rings centred on aircraft, clipped to the map display.
+    radar = pygame.Surface((MAP_WIDTH, MAP_HEIGHT), pygame.SRCALPHA)
+    max_r = min(245, max(90, int(MAP_WIDTH * 0.24)))
+    for frac in (0.33, 0.66, 1.0):
+        radius = int(max_r * frac)
+        pygame.draw.circle(radar, (110, 190, 220, 72), pos, radius, 1)
+    pygame.draw.line(radar, (110, 190, 220, 55), (pos[0] - max_r, pos[1]), (pos[0] + max_r, pos[1]), 1)
+    pygame.draw.line(radar, (110, 190, 220, 55), (pos[0], pos[1] - max_r), (pos[0], pos[1] + max_r), 1)
+    screen.blit(radar, (0, 0))
+
+    # Aircraft symbol: compact white/cyan flight-director style pointer.
+    angle = math.radians(track)
+    ux, uy = math.sin(angle), -math.cos(angle)
+    px, py = -uy, ux
+    nose = (int(pos[0] + ux * 16), int(pos[1] + uy * 16))
+    left = (int(pos[0] - ux * 10 + px * 8), int(pos[1] - uy * 10 + py * 8))
+    right = (int(pos[0] - ux * 10 - px * 8), int(pos[1] - uy * 10 - py * 8))
+    pygame.draw.polygon(screen, (5, 20, 30), (nose, left, right))
+    pygame.draw.polygon(screen, (210, 245, 255), (nose, left, right), 2)
+    pygame.draw.circle(screen, (100, 220, 255), pos, 3)
+
+    # Bottom-left weather key and status.
+    key_box = pygame.Rect(12, MAP_HEIGHT - 78, 310, 62)
+    key_surf = pygame.Surface(key_box.size, pygame.SRCALPHA)
+    key_surf.fill((3, 10, 19, 215))
+    screen.blit(key_surf, key_box.topleft)
+    pygame.draw.rect(screen, (65, 130, 165), key_box, 1)
+    screen.blit(font_micro.render("WEATHER RETURN INTENSITY", True, (180, 215, 230)), (key_box.x + 9, key_box.y + 7))
+    legend = [((55, 220, 115), "LIGHT"), ((255, 205, 45), "MOD"), ((255, 65, 55), "SEVERE"), ((220, 90, 235), "ASH")]
+    lx = key_box.x + 9
+    for col, label in legend:
+        pygame.draw.rect(screen, col, (lx, key_box.y + 31, 10, 10))
+        screen.blit(font_micro.render(label, True, (220, 235, 245)), (lx + 15, key_box.y + 30))
+        lx += 72
+
+    # Top-right operational state marker.
+    state = "HAZARD / RE-ROUTE" if map_hazard_ahead else "WEATHER SCAN / CLEAR"
+    state_color = (255, 100, 85) if map_hazard_ahead else (105, 225, 150)
+    state_surf = font_micro.render(state, True, state_color)
+    state_bg = pygame.Rect(MAP_WIDTH - state_surf.get_width() - 26, 49, state_surf.get_width() + 16, 22)
+    pygame.draw.rect(screen, (4, 12, 22), state_bg)
+    pygame.draw.rect(screen, state_color, state_bg, 1)
+    screen.blit(state_surf, (state_bg.x + 8, state_bg.y + 5))
 
 
 # ============================================================
@@ -3127,7 +3645,7 @@ def draw_dashboard(is_map=False):
                     value_color = SAFE_COLOR
             screen.blit(font_small.render(value, True, value_color), (x, y + 14))
             y += 31
-    screen.blit(font_micro.render("A* is invoked only after live hazard detection. Energy/cost are illustrative.", True, UI_MUTED), (16, HEIGHT - 17))
+    screen.blit(font_micro.render("BENDYRULER • SIMULATED WXR RETURNS • UDP SENSOR :5005 • ENERGY/COST ILLUSTRATIVE", True, UI_MUTED), (16, HEIGHT - 17))
     screen.blit(font_micro.render("F11 fullscreen  |  R reset flight  |  P report  |  M map/grid", True, UI_MUTED), (WIDTH - 330, HEIGHT - 17))
 
 
@@ -3207,7 +3725,7 @@ def draw_banner_and_common_text(is_map=False):
     subtitle = "REAL-TIME COURSE CORRECTION • SENSOR RANGE 6 CELLS"
     screen.blit(font_title.render(title, True, TEXT_MAIN), (12, 9))
     screen.blit(font_micro.render(subtitle, True, UI_MUTED), (12, 33))
-    status = grid_setup_message if sim_state == "SETUP" else "LIVE SENSOR: scanning ahead"
+    status = grid_setup_message if sim_state == "SETUP" else f"LIVE SENSOR: scanning | {SENSOR_BRIDGE_STATUS}"
     screen.blit(font_tiny.render(status[:100], True, UI_MUTED), (12, 56))
     draw_event_banner()
     draw_return_status(False)
@@ -3269,7 +3787,10 @@ def draw_grid_setup_panel():
     x, y = 12, 12
 
     panel.blit(font_title.render("GRID MISSION PLANNING", True, TEXT_MAIN), (x, y)); y += 30
-    y = label_on_surface(panel, x, y, "Launch a nominal path. A* waits until the live sensor sees a threat.")
+    y = label_on_surface(panel, x, y, "BendyRuler selects a safe bend after live threat detection.")
+    y = label_on_surface(panel, x, y, SENSOR_BRIDGE_STATUS[:48], SAFE_COLOR if SENSOR_BRIDGE_LAST_PACKET else UI_MUTED)
+    y = label_on_surface(panel, x, y, f"SIM EVENTS: {SENSOR_SIM_EVENT_COUNT} | AUTO: {'ON' if SENSOR_SIM_AUTO else 'OFF'}")
+    y = label_on_surface(panel, x, y, SENSOR_SIM_LAST_EVENT[:45], PANEL_MARKER_COLOR if SENSOR_SIM_EVENT_COUNT else UI_MUTED)
     y = label_on_surface(panel, x, y, f"Altitude levels: 0–{MAX_ALTITUDE_FT:,} ft / {GRID_LAYERS} levels")
     y = button_on_surface(panel, buttons, x, y,
                           "DISABLE REAL-TIME WEATHER" if REAL_WEATHER_ENABLED else "ENABLE REAL-TIME WEATHER",
@@ -3287,6 +3808,13 @@ def draw_grid_setup_panel():
     y = button_on_surface(panel, buttons, x, y, f"GOAL ALTITUDE: {alt_ft(goal_cell[2]):,} FT", "grid_cycle_goal_alt")
     y += 2
 
+    panel.blit(font_small.render("SOFTWARE SENSOR SIMULATOR", True, TEXT_MAIN), (x, y)); y += 21
+    y = button_on_surface(panel, buttons, x, y, "INJECT ASH CLOUD DETECTION", "sim_ash_grid", color=(105, 69, 35))
+    y = button_on_surface(panel, buttons, x, y, "INJECT HIGH TURBULENCE", "sim_turbulence_grid", color=(72, 82, 112))
+    y = button_on_surface(panel, buttons, x, y, f"AUTO SENSOR EVENTS: {'ON' if SENSOR_SIM_AUTO else 'OFF'}", "sim_toggle_auto", active=SENSOR_SIM_AUTO)
+    y = button_on_surface(panel, buttons, x, y, "CLEAR SIMULATED DETECTIONS", "sim_clear_grid")
+    y = label_on_surface(panel, x + 4, y, "Flight keys: A ash / T turbulence / Y random / C clear", UI_MUTED, dy=15)
+    y += 5
     panel.blit(font_small.render("WAYPOINT SYSTEM", True, TEXT_MAIN), (x, y)); y += 21
     y = button_on_surface(panel, buttons, x, y, f"WAYPOINT ALTITUDE: {alt_ft(waypoint_altitude):,} FT", "grid_cycle_waypoint_alt")
     y = button_on_surface(panel, buttons, x, y, "+ ADD WAYPOINT — click grid", "grid_add_waypoint", active=grid_setup_mode == "placing_waypoint")
@@ -3405,6 +3933,14 @@ def draw_map_setup_panel():
     panel.blit(font_title.render("REAL-WORLD MAP PLANNING", True, TEXT_MAIN), (x, y)); y += 30
     y = label_on_surface(panel, x, y, "OSM map + synthetic sensor zones. No full route is precomputed.")
     y = label_on_surface(panel, x, y, "Wheel over MAP = zoom • drag MAP = pan • wheel over PANEL = scroll")
+    y = label_on_surface(panel, x, y, f"SIM EVENTS: {SENSOR_SIM_EVENT_COUNT} | AUTO: {'ON' if SENSOR_SIM_AUTO else 'OFF'}")
+    y = label_on_surface(panel, x, y, SENSOR_SIM_LAST_EVENT[:45], PANEL_MARKER_COLOR if SENSOR_SIM_EVENT_COUNT else UI_MUTED)
+    panel.blit(font_small.render("SOFTWARE SENSOR SIMULATOR", True, TEXT_MAIN), (x, y)); y += 21
+    y = button_on_surface(panel, buttons, x, y, "INJECT ASH CLOUD DETECTION", "sim_ash_map", color=(105, 69, 35))
+    y = button_on_surface(panel, buttons, x, y, "INJECT HIGH TURBULENCE", "sim_turbulence_map", color=(72, 82, 112))
+    y = button_on_surface(panel, buttons, x, y, f"AUTO SENSOR EVENTS: {'ON' if SENSOR_SIM_AUTO else 'OFF'}", "sim_toggle_auto", active=SENSOR_SIM_AUTO)
+    y = button_on_surface(panel, buttons, x, y, "CLEAR SIMULATED DETECTIONS", "sim_clear_map")
+    y = label_on_surface(panel, x + 4, y, "Flight keys: A ash / T turbulence / Y random / C clear", UI_MUTED, dy=15)
     y += 5
 
     y = button_on_surface(panel, buttons, x, y, "REFRESH MAP TILES", "map_refresh")
@@ -3726,8 +4262,14 @@ def handle_grid_action(action, target=None):
     global grid_panel_scroll, waypoint_altitude, DRONE_SPEED_INDEX
     global start_cell, goal_cell, hazards, obstacles, grid_show_report
     global home_screen_started, home_screen_ready
-    global grid_setup_message
+    global grid_setup_message, SENSOR_SIM_AUTO, SENSOR_SIM_NEXT_EVENT
     if action == "noop": return
+    if action == "sim_ash_grid": queue_simulated_sensor_detection("ash", 3, False)
+    elif action == "sim_turbulence_grid": queue_simulated_sensor_detection("turbulence", "HIGH", False)
+    elif action == "sim_toggle_auto":
+        SENSOR_SIM_AUTO = not SENSOR_SIM_AUTO
+        SENSOR_SIM_NEXT_EVENT = time.perf_counter() + 2.0
+    elif action == "sim_clear_grid": clear_simulated_sensor_detections(False)
     if action == "toggle_real_weather":
         toggle_real_weather(False)
         return
@@ -3807,7 +4349,14 @@ def handle_map_action(action, target=None):
     global map_setup_mode, map_pending_placement, selected_map_hazard_id, selected_map_obstacle_id
     global map_panel_scroll, map_waypoint_altitude, map_start_z, map_goal_z, map_zoom_level
     global DRONE_SPEED_INDEX, map_show_report, map_mode, sim_state, map_status
+    global SENSOR_SIM_AUTO, SENSOR_SIM_NEXT_EVENT
     if action == "noop": return
+    if action == "sim_ash_map": queue_simulated_sensor_detection("ash", 3, True)
+    elif action == "sim_turbulence_map": queue_simulated_sensor_detection("turbulence", "HIGH", True)
+    elif action == "sim_toggle_auto":
+        SENSOR_SIM_AUTO = not SENSOR_SIM_AUTO
+        SENSOR_SIM_NEXT_EVENT = time.perf_counter() + 2.0
+    elif action == "sim_clear_map": clear_simulated_sensor_detections(True)
     if action == "toggle_real_weather":
         toggle_real_weather(True)
         return
@@ -3966,7 +4515,16 @@ while running:
             display_surface = pygame.display.set_mode(event.size, pygame.RESIZABLE)
 
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_F11:
+            if sim_state == "RUNNING" and event.key == pygame.K_a:
+                queue_simulated_sensor_detection("ash", 3, map_mode)
+            elif sim_state == "RUNNING" and event.key == pygame.K_t:
+                queue_simulated_sensor_detection("turbulence", "HIGH", map_mode)
+            elif sim_state == "RUNNING" and event.key == pygame.K_y:
+                kind = random.choice(("ash", "turbulence"))
+                queue_simulated_sensor_detection(kind, 3 if kind == "ash" else "HIGH", map_mode)
+            elif sim_state == "RUNNING" and event.key == pygame.K_c:
+                clear_simulated_sensor_detections(map_mode)
+            elif event.key == pygame.K_F11:
                 set_display_mode(not is_fullscreen)
             elif event.key == pygame.K_m and sim_state == "HOME":
                 map_mode = True; sim_state = "SETUP"; map_panel_scroll = 0; load_real_map()
@@ -4075,6 +4633,7 @@ while running:
             screen.blit(hint, (MAP_WIDTH - hint.get_width() - 12, MAP_HEIGHT - 24))
         else:
             draw_real_map()
+            draw_avionics_weather_overlay()
             draw_altitude_panel(map_path, map_hazards, is_map=True,
                                 current_segment=map_current_segment, progress=map_progress)
             draw_dashboard(is_map=True)
