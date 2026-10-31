@@ -5,6 +5,7 @@ import math
 import os
 import random
 import time
+import threading
 
 pygame.init()
 
@@ -1845,6 +1846,256 @@ def map_update_mission(dt):
             break
 
 
+map_panel_content_height = 0
+
+# ============================================================
+# OPTIONAL REAL-TIME WEATHER LAYER
+# ============================================================
+# Open-Meteo provides model-derived weather conditions. These are converted to
+# the simulator's existing LOW / MODERATE / HIGH turbulence categories; they
+# are not direct measurements of in-flight turbulence or volcanic ash.
+REAL_WEATHER_REFRESH_SECONDS = 300
+REAL_WEATHER_ENABLED = False
+weather_fetch_in_progress = False
+weather_pending_result = None
+weather_last_fetch = 0.0
+weather_last_update_text = "Not connected"
+weather_status = "OFF — using the scenario's built-in weather"
+weather_error = ""
+weather_requested_mode = None
+weather_lock = threading.Lock()
+WIND_DIRECTION_DEFAULT = WIND_DIRECTION
+
+
+def weather_sample_points(is_map):
+    """Return nine geographic sample points covering the visible mission area."""
+    points = []
+    for row in range(3):
+        for col in range(3):
+            sx = (col + 0.5) * MAP_WIDTH / 3
+            sy = (row + 0.5) * MAP_HEIGHT / 3
+            if is_map and map_surface is not None:
+                wx = map_origin_world[0] + sx
+                wy = map_origin_world[1] + sy
+                latlon = world_to_latlon(wx, wy, map_zoom_actual)
+            else:
+                # Grid Mode has no native geography. Anchor its weather field to
+                # the same configurable geographic reference used by Map Mode.
+                cx, cy = latlon_to_world(MAP_CENTER_LAT, MAP_CENTER_LON, map_zoom_level)
+                latlon = world_to_latlon(cx - MAP_WIDTH / 2 + sx,
+                                         cy - MAP_HEIGHT / 2 + sy, map_zoom_level)
+            points.append(latlon)
+    return points
+
+
+def _fetch_weather_worker(points, is_map):
+    global weather_pending_result, weather_fetch_in_progress
+    try:
+        if requests is None:
+            raise RuntimeError("Install requests to enable real-time weather (pip install requests).")
+        latitudes = ",".join(f"{p[0]:.6f}" for p in points)
+        longitudes = ",".join(f"{p[1]:.6f}" for p in points)
+        params = {
+            "latitude": latitudes,
+            "longitude": longitudes,
+            "current": "temperature_2m,precipitation,rain,showers,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
+            "hourly": "wind_speed_80m,wind_direction_80m,wind_gusts_10m,precipitation_probability,precipitation,rain,showers,cape,thunderstorm_probability,weather_code",
+            "forecast_days": 1,
+            "wind_speed_unit": "kmh",
+            "timezone": "auto",
+        }
+        response = requests.get("https://api.open-meteo.com/v1/forecast", params=params,
+                                 headers={"User-Agent": "AdaptiveDroneReplanner/1.0 (educational project)"}, timeout=12)
+        response.raise_for_status()
+        payload = response.json()
+        records = payload if isinstance(payload, list) else [payload]
+        converted = []
+        wind_samples = []
+        for idx, record in enumerate(records[:len(points)]):
+            current = record.get("current") or {}
+            hourly = record.get("hourly") or {}
+            def first_value(key, fallback=None):
+                values = hourly.get(key)
+                if isinstance(values, list) and values:
+                    times = hourly.get("time") or []
+                    current_time = str(current.get("time", ""))
+                    if current_time and times:
+                        hour_key = current_time[:13] + ":00"
+                        try:
+                            sample_index = times.index(hour_key)
+                        except ValueError:
+                            sample_index = 0
+                    else:
+                        sample_index = 0
+                    if sample_index < len(values) and values[sample_index] is not None:
+                        return values[sample_index]
+                return fallback
+            wind = current.get("wind_speed_10m")
+            if wind is None:
+                wind = first_value("wind_speed_80m", 0)
+            wind = float(wind or 0)
+            gust = current.get("wind_gusts_10m")
+            if gust is None:
+                gust = first_value("wind_gusts_10m", wind)
+            gust = float(gust or 0)
+            direction = current.get("wind_direction_10m")
+            if direction is None:
+                direction = first_value("wind_direction_80m", 0)
+            direction = float(direction or 0)
+            rain = float(current.get("rain") if current.get("rain") is not None else (first_value("rain", 0) or 0))
+            showers = float(current.get("showers") if current.get("showers") is not None else (first_value("showers", 0) or 0))
+            precip = float(current.get("precipitation") if current.get("precipitation") is not None else (first_value("precipitation", 0) or 0))
+            cape = float(first_value("cape", 0) or 0)
+            storm_prob = float(first_value("thunderstorm_probability", 0) or 0)
+            code = int(current.get("weather_code") if current.get("weather_code") is not None else (first_value("weather_code", 0) or 0))
+            # Conservative proxy classification into the app's predefined weather.
+            if gust >= 55 or wind >= 40 or cape >= 1500 or storm_prob >= 60 or code >= 95:
+                severity = "HIGH"
+            elif gust >= 35 or wind >= 25 or cape >= 800 or storm_prob >= 35 or rain >= 3 or showers >= 3 or code in (80, 81, 82, 86):
+                severity = "MODERATE"
+            elif gust >= 20 or wind >= 15 or cape >= 300 or storm_prob >= 15 or rain >= 1 or showers >= 1:
+                severity = "LOW"
+            else:
+                severity = None
+            converted.append({"severity": severity, "wind": float(wind), "gust": float(gust),
+                              "direction": float(direction), "rain": float(rain),
+                              "cape": float(cape), "code": int(code), "point_index": idx})
+            wind_samples.append((float(wind), float(direction)))
+        result = {"ok": True, "is_map": is_map, "points": points,
+                  "zones": converted, "wind_samples": wind_samples,
+                  "fetched_at": time.time()}
+    except Exception as exc:
+        result = {"ok": False, "error": str(exc)[:180], "is_map": is_map,
+                  "fetched_at": time.time()}
+    with weather_lock:
+        weather_pending_result = result
+        weather_fetch_in_progress = False
+
+
+def request_real_weather(is_map=None):
+    """Start a non-blocking weather fetch for the selected simulation mode."""
+    global weather_fetch_in_progress, weather_status, weather_error, weather_requested_mode
+    if not REAL_WEATHER_ENABLED or weather_fetch_in_progress:
+        return
+    if is_map is None:
+        is_map = map_mode
+    points = weather_sample_points(is_map)
+    weather_fetch_in_progress = True
+    weather_requested_mode = bool(is_map)
+    weather_error = ""
+    weather_status = "FETCHING LIVE WEATHER…"
+    threading.Thread(target=_fetch_weather_worker, args=(points, bool(is_map)), daemon=True).start()
+
+
+def _weather_wind_vector(samples):
+    if not samples:
+        return WIND_DIRECTION_DEFAULT
+    # Circular mean of meteorological FROM directions, converted to a TO vector.
+    sx = sum(math.sin(math.radians(d)) for _speed, d in samples)
+    sy = sum(math.cos(math.radians(d)) for _speed, d in samples)
+    direction_from = math.degrees(math.atan2(sx, sy)) % 360
+    direction_to = math.radians(direction_from + 180.0)
+    return (math.sin(direction_to), -math.cos(direction_to))
+
+
+def _apply_weather_result(result):
+    global next_hazard_id, next_map_hazard_id, WIND_DIRECTION
+    global weather_last_fetch, weather_last_update_text, weather_status, weather_error
+    global grid_scan_due, map_scan_due, grid_threat_lock, map_threat_lock
+    # Ignore a response that finishes after the user has switched the feature off.
+    if not REAL_WEATHER_ENABLED:
+        return
+    if not result.get("ok"):
+        weather_last_fetch = result.get("fetched_at", time.time())
+        weather_error = result.get("error", "Unknown weather service error")
+        weather_status = f"WEATHER ERROR: {weather_error[:36]}"
+        announce("REAL WEATHER UPDATE FAILED — EXISTING SCENARIO RETAINED", "warning", 2.4)
+        return
+    is_map = result.get("is_map", False)
+    zones = result.get("zones", [])
+    samples = result.get("wind_samples", [])
+    WIND_DIRECTION = _weather_wind_vector(samples)
+    if is_map:
+        map_hazards[:] = [h for h in map_hazards if h.get("source") != "real_weather"]
+        for z in zones:
+            if not z["severity"]:
+                continue
+            idx = z["point_index"]
+            row, col = divmod(idx, 3)
+            x0, x1 = col * MAP_WIDTH / 3, (col + 1) * MAP_WIDTH / 3
+            y0, y1 = row * MAP_HEIGHT / 3, (row + 1) * MAP_HEIGHT / 3
+            ll1 = world_to_latlon(map_origin_world[0] + x0, map_origin_world[1] + y0, map_zoom_actual)
+            ll2 = world_to_latlon(map_origin_world[0] + x1, map_origin_world[1] + y1, map_zoom_actual)
+            hz = make_map_hazard(next_map_hazard_id, "turbulence", ll1[0], ll1[1], ll2[0], ll2[1],
+                                 0, GRID_LAYERS - 1, z["severity"])
+            hz["source"] = "real_weather"
+            hz["weather_wind_kmh"] = round(z["wind"], 1)
+            hz["weather_gust_kmh"] = round(z["gust"], 1)
+            map_hazards.append(hz)
+            next_map_hazard_id += 1
+        map_scan_due = True
+        map_threat_lock = None
+    else:
+        hazards[:] = [h for h in hazards if h.get("source") != "real_weather"]
+        for z in zones:
+            if not z["severity"]:
+                continue
+            idx = z["point_index"]
+            row, col = divmod(idx, 3)
+            c0, c1 = col * GRID_COLS // 3, max(col * GRID_COLS // 3, ((col + 1) * GRID_COLS // 3) - 1)
+            r0, r1 = row * GRID_ROWS // 3, max(row * GRID_ROWS // 3, ((row + 1) * GRID_ROWS // 3) - 1)
+            hz = make_hazard(next_hazard_id, "turbulence", c0, c1 - c0 + 1,
+                             r0, r1 - r0 + 1, 0, GRID_LAYERS - 1, z["severity"])
+            hz["source"] = "real_weather"
+            hz["weather_wind_kmh"] = round(z["wind"], 1)
+            hz["weather_gust_kmh"] = round(z["gust"], 1)
+            hazards.append(hz)
+            next_hazard_id += 1
+        grid_scan_due = True
+        grid_threat_lock = None
+    weather_last_fetch = result.get("fetched_at", time.time())
+    weather_last_update_text = time.strftime("%H:%M:%S", time.localtime(weather_last_fetch))
+    active_count = sum(1 for z in zones if z["severity"])
+    weather_status = f"ON — {active_count} weather-derived zone(s) • updated {weather_last_update_text}"
+    weather_error = ""
+    announce(f"REAL WEATHER APPLIED — {active_count} TURBULENCE ZONE(S)", "info", 2.0)
+
+
+def process_weather_updates():
+    global weather_pending_result
+    with weather_lock:
+        result = weather_pending_result
+        weather_pending_result = None
+    if result is not None:
+        _apply_weather_result(result)
+    if REAL_WEATHER_ENABLED:
+        if weather_requested_mode is not None and bool(map_mode) != bool(weather_requested_mode) and not weather_fetch_in_progress:
+            request_real_weather(map_mode)
+        elif not weather_fetch_in_progress and time.time() - weather_last_fetch >= REAL_WEATHER_REFRESH_SECONDS:
+            request_real_weather(map_mode)
+
+
+def toggle_real_weather(is_map):
+    global REAL_WEATHER_ENABLED, weather_status, weather_last_fetch, WIND_DIRECTION
+    if is_map and map_surface is None:
+        weather_status = "LOAD MAP BEFORE ENABLING WEATHER"
+        announce("LOAD THE MAP BEFORE ENABLING REAL WEATHER", "warning", 2.0)
+        return
+    REAL_WEATHER_ENABLED = not REAL_WEATHER_ENABLED
+    if REAL_WEATHER_ENABLED:
+        weather_last_fetch = 0.0
+        weather_status = "ENABLED — waiting for first weather update"
+        request_real_weather(is_map)
+        announce("REAL-TIME WEATHER ENABLED", "info", 1.8)
+    else:
+        map_hazards[:] = [h for h in map_hazards if h.get("source") != "real_weather"]
+        hazards[:] = [h for h in hazards if h.get("source") != "real_weather"]
+        WIND_DIRECTION = WIND_DIRECTION_DEFAULT
+        weather_status = "OFF — using the scenario's built-in weather"
+        weather_last_fetch = time.time()
+        announce("REAL-TIME WEATHER DISABLED", "safe", 1.8)
+
+
 # ============================================================
 # PATH / METRICS
 # ============================================================
@@ -3020,6 +3271,12 @@ def draw_grid_setup_panel():
     panel.blit(font_title.render("GRID MISSION PLANNING", True, TEXT_MAIN), (x, y)); y += 30
     y = label_on_surface(panel, x, y, "Launch a nominal path. A* waits until the live sensor sees a threat.")
     y = label_on_surface(panel, x, y, f"Altitude levels: 0–{MAX_ALTITUDE_FT:,} ft / {GRID_LAYERS} levels")
+    y = button_on_surface(panel, buttons, x, y,
+                          "DISABLE REAL-TIME WEATHER" if REAL_WEATHER_ENABLED else "ENABLE REAL-TIME WEATHER",
+                          "toggle_real_weather", active=REAL_WEATHER_ENABLED,
+                          color=BUTTON_ACTIVE_COLOR if REAL_WEATHER_ENABLED else BUTTON_COLOR)
+    y = label_on_surface(panel, x + 4, y, weather_status[:48], SAFE_COLOR if REAL_WEATHER_ENABLED and not weather_error else UI_MUTED, dy=16)
+    y = label_on_surface(panel, x + 4, y, f"Grid weather anchor: {MAP_CENTER_LAT:.3f}, {MAP_CENTER_LON:.3f}", UI_MUTED, dy=15)
     y += 6
 
     y = button_on_surface(panel, buttons, x, y, "PLACE START", "grid_place_start", active=grid_setup_mode == "placing_start")
@@ -3070,7 +3327,9 @@ def draw_grid_setup_panel():
     for h in hazards:
         row = pygame.Rect(x, y, 276, 24)
         pygame.draw.rect(panel, BUTTON_ACTIVE_COLOR if h["id"] == selected_hazard_id else BUTTON_COLOR, row)
-        panel.blit(font_micro.render(f"#{h['id']} {hazard_label(h)}{hazard_move_suffix(h)}", True, TEXT_MAIN), (x + 5, y + 6))
+        htext = (f"LIVE {hazard_label(h)} W{h.get('weather_wind_kmh', 0):.0f}/G{h.get('weather_gust_kmh', 0):.0f}"
+                 if h.get("source") == "real_weather" else f"#{h['id']} {hazard_label(h)}{hazard_move_suffix(h)}")
+        panel.blit(font_micro.render(htext[:42], True, TEXT_MAIN), (x + 5, y + 6))
         buttons.append((row, "grid_select_hazard", h["id"]))
         rm = pygame.Rect(x + 280, y, 26, 24); pygame.draw.rect(panel, BUTTON_DANGER_COLOR, rm)
         panel.blit(font_micro.render("X", True, TEXT_MAIN), (x + 289, y + 6))
@@ -3151,6 +3410,11 @@ def draw_map_setup_panel():
     y = button_on_surface(panel, buttons, x, y, "REFRESH MAP TILES", "map_refresh")
     y = button_on_surface(panel, buttons, x, y, "ZOOM IN", "map_zoom_in")
     y = button_on_surface(panel, buttons, x, y, "ZOOM OUT", "map_zoom_out")
+    y = button_on_surface(panel, buttons, x, y,
+                          "DISABLE REAL-TIME WEATHER" if REAL_WEATHER_ENABLED else "ENABLE REAL-TIME WEATHER",
+                          "toggle_real_weather", active=REAL_WEATHER_ENABLED,
+                          color=BUTTON_ACTIVE_COLOR if REAL_WEATHER_ENABLED else BUTTON_COLOR)
+    y = label_on_surface(panel, x + 4, y, weather_status[:48], SAFE_COLOR if REAL_WEATHER_ENABLED and not weather_error else UI_MUTED, dy=16)
 
     y += 4
     panel.blit(font_small.render("START / GOAL", True, TEXT_MAIN), (x, y)); y += 21
@@ -3198,7 +3462,9 @@ def draw_map_setup_panel():
     for h in map_hazards:
         row = pygame.Rect(x, y, 276, 24)
         pygame.draw.rect(panel, BUTTON_ACTIVE_COLOR if h["id"] == selected_map_hazard_id else BUTTON_COLOR, row)
-        panel.blit(font_micro.render(f"#{h['id']} {hazard_label(h)}{hazard_move_suffix(h)}", True, TEXT_MAIN), (x + 5, y + 6))
+        htext = (f"LIVE {hazard_label(h)} W{h.get('weather_wind_kmh', 0):.0f}/G{h.get('weather_gust_kmh', 0):.0f}"
+                 if h.get("source") == "real_weather" else f"#{h['id']} {hazard_label(h)}{hazard_move_suffix(h)}")
+        panel.blit(font_micro.render(htext[:42], True, TEXT_MAIN), (x + 5, y + 6))
         buttons.append((row, "map_select_hazard", h["id"]))
         rm = pygame.Rect(x + 280, y, 26, 24); pygame.draw.rect(panel, BUTTON_DANGER_COLOR, rm)
         panel.blit(font_micro.render("X", True, TEXT_MAIN), (x + 289, y + 6))
@@ -3462,6 +3728,9 @@ def handle_grid_action(action, target=None):
     global home_screen_started, home_screen_ready
     global grid_setup_message
     if action == "noop": return
+    if action == "toggle_real_weather":
+        toggle_real_weather(False)
+        return
     if action == "home_grid":
         map_mode = False; sim_state = "SETUP"; grid_panel_scroll = 0
         return
@@ -3539,6 +3808,9 @@ def handle_map_action(action, target=None):
     global map_panel_scroll, map_waypoint_altitude, map_start_z, map_goal_z, map_zoom_level
     global DRONE_SPEED_INDEX, map_show_report, map_mode, sim_state, map_status
     if action == "noop": return
+    if action == "toggle_real_weather":
+        toggle_real_weather(True)
+        return
     if action == "home_grid":
         map_mode = False; sim_state = "SETUP"; grid_panel_scroll = 0
         return
@@ -3777,6 +4049,9 @@ while running:
         map_panel_scroll = max(0, min(map_panel_scroll, max(0, map_panel_content_height - GRID_HEIGHT)))
     else:
         grid_panel_scroll = max(0, min(grid_panel_scroll, max(0, grid_panel_content_height - GRID_HEIGHT)))
+
+    # Apply completed background weather downloads on the Pygame/main thread.
+    process_weather_updates()
 
     # ---------------- START SCREEN ----------------
     if sim_state == "HOME":
