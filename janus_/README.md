@@ -18,7 +18,7 @@ Janus runs on a **companion computer** (Raspberry Pi, Jetson, any Linux board) w
                                └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Safety model (read this first)
+## Safety model
 
 | Who | Does what |
 |---|---|
