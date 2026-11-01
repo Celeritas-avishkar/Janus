@@ -77,9 +77,6 @@ The system prioritizes threats based on the <b>severity of degradation</b> the s
 > [!Note]
 > To use Map Mode install pillow using bash and have an internet connection while using it since it pulls OpenStreetMap API
 
-> [!Important]
-> For Installation refer [here](Installation.md)
-
 ---
 
 # ✏️ <ins>Versions:</ins>
