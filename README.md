@@ -42,11 +42,11 @@ he aircraft begins on a simple **nominal route**. A **<ins>forward-looking senso
 Onboard sensors that can perform independently from ground station
 </td> </tr> <tr> <td valign="top" width="50%">
 
-・**Adaptable to multiple aircraft:** The ability to include multiple types of UAS ranging from hobbyists to defense grade equipment under our compatibility.
+・<ins>Adaptable to multiple aircraft:</ins> The ability to include multiple types of UAS ranging from hobbyists to defense grade equipment under our compatibility.
 <br />
 
 <br />
-・**Ability to resolve multiple weather types:** The model has been trained to handle multiple types of contingency and disaster scenarios.
+・<ins>Ability to resolve multiple weather types:</ins> The model has been trained to handle multiple types of contingency and disaster scenarios.
 ⠀
 </td> <td valign="top" width="50%">
 
