@@ -85,8 +85,28 @@ python -m janus.doctor
 python run_janus.py --tour
 ```
 
-If `./run.sh` says "permission denied", run `bash run.sh setup` or `chmod +x run.sh` once. On first run Windows may ask whether Python can use the network. Everything binds to `127.0.0.1` by default, so "Private networks" is enough.
+> If `./run.sh` says "permission denied", run `bash run.sh setup` or `chmod +x run.sh` once. On first run Windows may ask whether Python can use the network. Everything binds to `127.0.0.1` by default, so "Private networks" is enough.
+
 </details>
+
+<br />
+
+<details>
+<summary><b>Linux</b></summary>
+
+Clone the repository and then run the `run.sh` files, a one-line command is given below
+
+```bash
+git clone https://github.com/Celeritas-avishkar/Janus
+cd ~/home/USER/Janus/janus_demo1
+./run.sh setup
+./run.sh doctor
+./run.sh tour
+```
+
+</details>
+
+<br />
 
 ---
 
